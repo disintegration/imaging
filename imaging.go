@@ -55,7 +55,16 @@ func New(width, height int, fillColor color.Color) draw.Image {
 	return dst
 }
 
-// This function is used internally to convert any image type to image.RGBA for faster pixel access
+// Returns a copy of img
+func Copy(img image.Image) draw.Image {
+	b := img.Bounds()
+	dst := image.NewRGBA(b)
+	draw.Draw(dst, dst.Bounds(), img, b.Min, draw.Src)
+	return dst
+}
+
+// This function is used internally to check if image type is image.RGBA
+// If not - converts any image type to image.RGBA for faster pixel access
 func convertToRGBA(src image.Image) *image.RGBA {
 	var dst *image.RGBA
 
@@ -66,37 +75,6 @@ func convertToRGBA(src image.Image) *image.RGBA {
 		b := src.Bounds()
 		dst = image.NewRGBA(b) // converted image have the same bounds as a source
 		draw.Draw(dst, dst.Bounds(), src, b.Min, draw.Src)
-	}
-
-	return dst
-}
-
-// Returns a copy of img
-func Copy(img image.Image) draw.Image {
-	src := convertToRGBA(img)
-	srcBounds := src.Bounds()
-	srcMinX := srcBounds.Min.X
-	srcMinY := srcBounds.Min.Y
-
-	dstW := srcBounds.Dx()
-	dstH := srcBounds.Dy()
-	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
-
-	for dstY := 0; dstY < dstH; dstY++ {
-		for dstX := 0; dstX < dstW; dstX++ {
-
-			srcX := srcMinX + dstX
-			srcY := srcMinY + dstY
-
-			srcOff := src.PixOffset(srcX, srcY)
-			dstOff := dst.PixOffset(dstX, dstY)
-
-			dst.Pix[dstOff+0] = src.Pix[srcOff+0]
-			dst.Pix[dstOff+1] = src.Pix[srcOff+1]
-			dst.Pix[dstOff+2] = src.Pix[srcOff+2]
-			dst.Pix[dstOff+3] = src.Pix[srcOff+3]
-
-		}
 	}
 
 	return dst
