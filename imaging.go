@@ -289,6 +289,10 @@ func FlipV(img image.Image) draw.Image {
 
 // Simple image resize function. Will be removed later if not needed.
 func resizeNearest(img image.Image, dstW, dstH int) draw.Image {
+	if dstW <= 0 || dstH <= 0 {
+		return &image.RGBA{}
+	}
+
 	src := convertToRGBA(img)
 	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
 
@@ -297,6 +301,10 @@ func resizeNearest(img image.Image, dstW, dstH int) draw.Image {
 	srcH := srcBounds.Dy()
 	srcMinX := srcBounds.Min.X
 	srcMinY := srcBounds.Min.Y
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
 
 	dy := float64(srcH) / float64(dstH)
 	dx := float64(srcW) / float64(dstW)
@@ -318,7 +326,12 @@ func resizeNearest(img image.Image, dstW, dstH int) draw.Image {
 // Resizes image img to width=dstW and height=dstH.
 // Bilinear interpolation algorithm used at the moment. This may change later.
 func Resize(img image.Image, dstW, dstH int) draw.Image {
-	// TODO: check src and dst image bounds, fix small images resizing (w or h <= 2px)
+	if dstW <= 0 || dstH <= 0 {
+		return &image.RGBA{}
+	}
+	if dstW == 1 || dstH == 1 {
+		return resizeNearest(img, dstW, dstH)
+	}
 
 	src := convertToRGBA(img)
 	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
@@ -330,6 +343,13 @@ func Resize(img image.Image, dstW, dstH int) draw.Image {
 	srcMinY := srcBounds.Min.Y
 	srcMaxX := srcBounds.Max.X
 	srcMaxY := srcBounds.Max.Y
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
+	if srcW == 1 || srcH == 1 {
+		return resizeNearest(img, dstW, dstH)
+	}
 
 	dy := float64(srcH-1) / float64(dstH-1)
 	dx := float64(srcW-1) / float64(dstW-1)
