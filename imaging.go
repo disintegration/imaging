@@ -3,6 +3,7 @@ package imaging
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	_ "image/gif"
 	"image/jpeg"
@@ -11,7 +12,7 @@ import (
 	"strings"
 )
 
-// Loads image from disk. Returns image.Image
+// Loads image from file. Returns image.Image
 func Open(filename string) (img image.Image, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -26,7 +27,7 @@ func Open(filename string) (img image.Image, err error) {
 	return
 }
 
-// Saves image img to disk with given filename. Format parameter may be either "jpeg" or "png"
+// Saves image img to file with given filename. Format parameter may be either "jpeg" or "png"
 func Save(img image.Image, filename string, format string) (err error) {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -46,7 +47,15 @@ func Save(img image.Image, filename string, format string) (err error) {
 	return
 }
 
-// Used internally to convert any image type to image.RGBA for faster pixel access
+// Creates a new image with given size and fills it with given color. 
+func New(width, height int, fillColor color.Color) draw.Image {
+	dst := image.NewRGBA(image.Rect(0, 0, width, height))
+	unf := image.NewUniform(fillColor)
+	draw.Draw(dst, dst.Bounds(), unf, image.ZP, draw.Src)
+	return dst
+}
+
+// This function is used internally to convert any image type to image.RGBA for faster pixel access
 func convertToRGBA(src image.Image) *image.RGBA {
 	var dst *image.RGBA
 
@@ -55,11 +64,94 @@ func convertToRGBA(src image.Image) *image.RGBA {
 		dst = src.(*image.RGBA)
 	default:
 		b := src.Bounds()
-		dst = image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+		dst = image.NewRGBA(b) // converted image have the same bounds as a source
 		draw.Draw(dst, dst.Bounds(), src, b.Min, draw.Src)
 	}
 
 	return dst
+}
+
+// Returns a copy of img
+func Copy(img image.Image) draw.Image {
+	src := convertToRGBA(img)
+	srcBounds := src.Bounds()
+	srcMinX := srcBounds.Min.X
+	srcMinY := srcBounds.Min.Y
+
+	dstW := srcBounds.Dx()
+	dstH := srcBounds.Dy()
+	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
+
+	for dstY := 0; dstY < dstH; dstY++ {
+		for dstX := 0; dstX < dstW; dstX++ {
+
+			srcX := srcMinX + dstX
+			srcY := srcMinY + dstY
+
+			srcOff := src.PixOffset(srcX, srcY)
+			dstOff := dst.PixOffset(dstX, dstY)
+
+			dst.Pix[dstOff+0] = src.Pix[srcOff+0]
+			dst.Pix[dstOff+1] = src.Pix[srcOff+1]
+			dst.Pix[dstOff+2] = src.Pix[srcOff+2]
+			dst.Pix[dstOff+3] = src.Pix[srcOff+3]
+
+		}
+	}
+
+	return dst
+}
+
+// Returns a copy of rectangular area of img
+func Crop(img image.Image, rect image.Rectangle) draw.Image {
+	src := convertToRGBA(img)
+	sub := src.SubImage(rect)
+	return Copy(sub)
+}
+
+// Returns a copy of rectangular area of given size from the center of img
+func CropCenter(img image.Image, cropW, cropH int) draw.Image {
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+	srcMinX := srcBounds.Min.X
+	srcMinY := srcBounds.Min.Y
+
+	centerX := srcMinX + srcW/2
+	centerY := srcMinY + srcH/2
+
+	x0 := centerX - cropW/2
+	y0 := centerY - cropH/2
+	x1 := x0 + cropW
+	y1 := y0 + cropH
+
+	return Crop(img, image.Rect(x0, y0, x1, y1))
+}
+
+// Pastes image src to image img at given position. Returns resulting image.
+func Paste(img, src image.Image, pos image.Point) draw.Image {
+	dst := Copy(img)
+	startPt := pos
+	endPt := startPt.Add(src.Bounds().Size())
+	draw.Draw(dst, image.Rectangle{startPt, endPt}, src, src.Bounds().Min, draw.Src)
+	return dst
+}
+
+// Pastes image src to the center of image img. Returns resulting image.
+func PasteCenter(img, src image.Image) draw.Image {
+	imgBounds := img.Bounds()
+	imgW := imgBounds.Dx()
+	imgH := imgBounds.Dy()
+	imgMinX := imgBounds.Min.X
+	imgMinY := imgBounds.Min.Y
+
+	centerX := imgMinX + imgW/2
+	centerY := imgMinY + imgH/2
+
+	x0 := centerX - src.Bounds().Dx()/2
+	y0 := centerY - src.Bounds().Dy()/2
+
+	return Paste(img, src, image.Pt(x0, y0))
 }
 
 // Rotates image img by 90 degrees clockwise
@@ -217,37 +309,6 @@ func FlipV(img image.Image) draw.Image {
 
 }
 
-// Returns a copy of img
-func Copy(img image.Image) draw.Image {
-	src := convertToRGBA(img)
-	srcBounds := src.Bounds()
-	srcMinX := srcBounds.Min.X
-	srcMinY := srcBounds.Min.Y
-
-	dstW := srcBounds.Dx()
-	dstH := srcBounds.Dy()
-	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
-
-	for dstY := 0; dstY < dstH; dstY++ {
-		for dstX := 0; dstX < dstW; dstX++ {
-
-			srcX := srcMinX + dstX
-			srcY := srcMinY + dstY
-
-			srcOff := src.PixOffset(srcX, srcY)
-			dstOff := dst.PixOffset(dstX, dstY)
-
-			dst.Pix[dstOff+0] = src.Pix[srcOff+0]
-			dst.Pix[dstOff+1] = src.Pix[srcOff+1]
-			dst.Pix[dstOff+2] = src.Pix[srcOff+2]
-			dst.Pix[dstOff+3] = src.Pix[srcOff+3]
-
-		}
-	}
-
-	return dst
-}
-
 // Simple image resize function. Will be removed later if not needed.
 func resizeNearest(img image.Image, dstW, dstH int) draw.Image {
 	src := convertToRGBA(img)
@@ -267,7 +328,10 @@ func resizeNearest(img image.Image, dstW, dstH int) draw.Image {
 		for dstX := 0; dstX < dstW; dstX++ {
 			srcX := int(float64(srcMinX) + float64(dstX)*dx)
 
-			dst.Set(dstX, dstY, src.At(srcX, srcY))
+			i := dst.PixOffset(dstX, dstY)
+			j := src.PixOffset(srcX, srcY)
+
+			dst.Pix[i+0], dst.Pix[i+1], dst.Pix[i+2], dst.Pix[i+3] = src.Pix[j+0], src.Pix[j+1], src.Pix[j+2], src.Pix[j+3]
 		}
 	}
 	return dst
@@ -348,4 +412,136 @@ func Resize(img image.Image, dstW, dstH int) draw.Image {
 	}
 
 	return dst
+}
+
+// Scales image with given scale factor, keeps aspect ratio.
+func Scale(img image.Image, scaleFactor float64) draw.Image {
+	if scaleFactor <= 0.0 {
+		return &image.RGBA{}
+	}
+
+	if scaleFactor == 1.0 {
+		return Copy(img)
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
+
+	dstW := int(float64(srcW) * scaleFactor)
+	dstH := int(float64(srcH) * scaleFactor)
+
+	return Resize(img, dstW, dstH)
+}
+
+// Scales image  to given width, keeps aspect ratio.
+func ScaleToWidth(img image.Image, dstW int) draw.Image {
+	if dstW <= 0 {
+		return &image.RGBA{}
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
+
+	if dstW == srcW {
+		return Copy(img)
+	}
+
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	dstH := int(float64(dstW) / srcAspectRatio)
+
+	return Resize(img, dstW, dstH)
+}
+
+// Scales image  to given height, keeps aspect ratio.
+func ScaleToHeight(img image.Image, dstH int) draw.Image {
+	if dstH <= 0 {
+		return &image.RGBA{}
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
+
+	if dstH == srcH {
+		return Copy(img)
+	}
+
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	dstW := int(float64(dstH) * srcAspectRatio)
+
+	return Resize(img, dstW, dstH)
+}
+
+// Scales down image to fit given maximum width and height, keeps aspect ratio.
+func Fit(img image.Image, maxW, maxH int) draw.Image {
+	if maxW <= 0 || maxH <= 0 {
+		return &image.RGBA{}
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
+
+	if srcW <= maxW && srcH <= maxH {
+		return Copy(img)
+	}
+
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	maxAspectRatio := float64(maxW) / float64(maxH)
+
+	var newW, newH int
+	if srcAspectRatio > maxAspectRatio {
+		newW = maxW
+		newH = int(srcAspectRatio / float64(newW))
+	} else {
+		newH = maxH
+		newW = int(srcAspectRatio * float64(newH))
+	}
+
+	return Resize(img, newW, newH)
+}
+
+// Scales image up or down and crops to exact given size.
+func Thumbnail(img image.Image, thumbW, thumbH int) draw.Image {
+	if thumbW <= 0 || thumbH <= 0 {
+		return &image.RGBA{}
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.RGBA{}
+	}
+
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	thumbAspectRatio := float64(thumbW) / float64(thumbH)
+
+	var tmp image.Image
+	if srcAspectRatio > thumbAspectRatio {
+		tmp = ScaleToHeight(img, thumbH)
+	} else {
+		tmp = ScaleToWidth(img, thumbW)
+	}
+
+	return CropCenter(tmp, thumbW, thumbH)
 }
