@@ -2,8 +2,10 @@
 
 Simple Go image processing package. 
 
-Implements a number of basic image transformations (resizing, rotation, flipping) 
-as well as simplified image loading and saving.
+Implements a number of basic image manipulation functions as well as simplified image loading, creation and saving. 
+All the image manipulation functions are not in-place, they return a new image with bounds (0, 0) - (Width, Height)
+This package integrates with standard "image" package well: most functions take image.Image interface as an argument 
+and return draw.Image interface.
 
 ### Installation
 
