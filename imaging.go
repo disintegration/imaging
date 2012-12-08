@@ -55,11 +55,12 @@ func New(width, height int, fillColor color.Color) draw.Image {
 	return dst
 }
 
-// Returns a copy of img
+// Returns a copy of img. New image bounds will start at (0, 0) 
 func Copy(img image.Image) draw.Image {
-	b := img.Bounds()
-	dst := image.NewRGBA(b)
-	draw.Draw(dst, dst.Bounds(), img, b.Min, draw.Src)
+	imgBounds := img.Bounds()
+	newBounds := imgBounds.Sub(imgBounds.Min) // new image bounds start at (0, 0)
+	dst := image.NewRGBA(newBounds)
+	draw.Draw(dst, newBounds, img, imgBounds.Min, draw.Src)
 	return dst
 }
 
@@ -80,11 +81,11 @@ func convertToRGBA(src image.Image) *image.RGBA {
 	return dst
 }
 
-// Returns a copy of rectangular area of img
+// Returns a copy of rectangular area of img. 
 func Crop(img image.Image, rect image.Rectangle) draw.Image {
 	src := convertToRGBA(img)
 	sub := src.SubImage(rect)
-	return Copy(sub)
+	return Copy(sub) // New image Bounds().Min point will be (0, 0)
 }
 
 // Returns a copy of rectangular area of given size from the center of img
@@ -108,8 +109,8 @@ func CropCenter(img image.Image, cropW, cropH int) draw.Image {
 
 // Pastes image src to image img at given position. Returns resulting image.
 func Paste(img, src image.Image, pos image.Point) draw.Image {
-	dst := Copy(img)
-	startPt := pos
+	dst := Copy(img)                     // copied image bounds start at (0, 0)
+	startPt := pos.Sub(img.Bounds().Min) // so we should translate start point
 	endPt := startPt.Add(src.Bounds().Size())
 	draw.Draw(dst, image.Rectangle{startPt, endPt}, src, src.Bounds().Min, draw.Src)
 	return dst
