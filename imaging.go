@@ -8,6 +8,7 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	"image/png"
+	"math"
 	"os"
 	"strings"
 )
@@ -288,56 +289,25 @@ func FlipV(img image.Image) draw.Image {
 
 }
 
-// Simple image resize function. Will be removed later if not needed.
-func resizeNearest(img image.Image, dstW, dstH int) draw.Image {
-	if dstW <= 0 || dstH <= 0 {
-		return &image.RGBA{}
+// Filter for antialias resizing is a basic quadratic function
+func antialiasFilter(x float64) float64 {
+	x = math.Abs(x)
+	if x <= 1.0 {
+		return x*x*(1.4*x-2.4) + 1
 	}
-
-	src := convertToRGBA(img)
-	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
-
-	srcBounds := src.Bounds()
-	srcW := srcBounds.Dx()
-	srcH := srcBounds.Dy()
-	srcMinX := srcBounds.Min.X
-	srcMinY := srcBounds.Min.Y
-
-	if srcW <= 0 || srcH <= 0 {
-		return &image.RGBA{}
-	}
-
-	dy := float64(srcH) / float64(dstH)
-	dx := float64(srcW) / float64(dstW)
-
-	for dstY := 0; dstY < dstH; dstY++ {
-		srcY := int(float64(srcMinY) + float64(dstY)*dy)
-		for dstX := 0; dstX < dstW; dstX++ {
-			srcX := int(float64(srcMinX) + float64(dstX)*dx)
-
-			i := dst.PixOffset(dstX, dstY)
-			j := src.PixOffset(srcX, srcY)
-
-			dst.Pix[i+0], dst.Pix[i+1], dst.Pix[i+2], dst.Pix[i+3] = src.Pix[j+0], src.Pix[j+1], src.Pix[j+2], src.Pix[j+3]
-		}
-	}
-	return dst
+	return 0
 }
 
-// Resizes image img to width=dstW and height=dstH.
-// Bilinear interpolation algorithm used at the moment. This may change later.
+// Resizes image img to width=dstW and height=dstH
 func Resize(img image.Image, dstW, dstH int) draw.Image {
+	// Antialiased resize algorithm. The quality is good, especially at downsizing, 
+	// but the speed is not too good, some optimisations are needed.
+
 	if dstW <= 0 || dstH <= 0 {
 		return &image.RGBA{}
 	}
-	if dstW == 1 || dstH == 1 {
-		return resizeNearest(img, dstW, dstH)
-	}
 
-	src := convertToRGBA(img)
-	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
-
-	srcBounds := src.Bounds()
+	srcBounds := img.Bounds()
 	srcW := srcBounds.Dx()
 	srcH := srcBounds.Dy()
 	srcMinX := srcBounds.Min.X
@@ -348,68 +318,93 @@ func Resize(img image.Image, dstW, dstH int) draw.Image {
 	if srcW <= 0 || srcH <= 0 {
 		return &image.RGBA{}
 	}
-	if srcW == 1 || srcH == 1 {
-		return resizeNearest(img, dstW, dstH)
-	}
 
-	dy := float64(srcH-1) / float64(dstH-1)
-	dx := float64(srcW-1) / float64(dstW-1)
+	src := convertToRGBA(img)
+	dst := image.NewRGBA(image.Rect(0, 0, dstW, dstH))
 
-	var i int
+	dy := float64(srcH) / float64(dstH)
+	dx := float64(srcW) / float64(dstW)
+
+	radiusX := math.Ceil(dx / 1.5)
+	radiusY := math.Ceil(dy / 1.5)
+
+	coefs := make([]float64, int(radiusY+1)*2*4)
+	xvals := make([]float64, int(radiusX+1)*2*4)
 
 	for dstY := 0; dstY < dstH; dstY++ {
-
-		fy := float64(srcMinY) + float64(dstY)*dy
-		srcY := int(fy)
-		if srcY < srcMinY {
-			srcY = srcMinY
-		} else {
-			if srcY >= srcMaxY-1 {
-				srcY = srcMaxY - 2
-			}
-		}
-		u := fy - float64(srcY)
+		fy := float64(srcMinY) + (float64(dstY)+0.5)*dy - 0.5
 
 		for dstX := 0; dstX < dstW; dstX++ {
+			fx := float64(srcMinX) + (float64(dstX)+0.5)*dx - 0.5
 
-			fx := float64(srcMinX) + float64(dstX)*dx
-			srcX := int(fx)
-			if srcX < srcMinX {
-				srcX = srcMinX
-			} else {
-				if srcX >= srcMaxX-1 {
-					srcX = srcMaxX - 2
-				}
+			startX := int(math.Ceil(fx - radiusX))
+			if startX < srcMinX {
+				startX = srcMinX
 			}
-			v := fx - float64(srcX)
+			endX := int(math.Floor(fx + radiusX))
+			if endX > srcMaxX-1 {
+				endX = srcMaxX - 1
+			}
 
-			z1 := (1 - v) * (1 - u)
-			z2 := v * (1 - u)
-			z3 := v * u
-			z4 := (1 - v) * u
+			startY := int(math.Ceil(fy - radiusY))
+			if startY < srcMinY {
+				startY = srcMinY
+			}
+			endY := int(math.Floor(fy + radiusY))
+			if endY > srcMaxY-1 {
+				endY = srcMaxY - 1
+			}
 
-			i = src.PixOffset(srcX, srcY)
-			r1, g1, b1, a1 := src.Pix[i+0], src.Pix[i+1], src.Pix[i+2], src.Pix[i+3]
+			// cache y weight coefficients
+			for y := startY; y <= endY; y++ {
+				coefs[y-startY] = antialiasFilter((fy - float64(y)) / radiusY)
+			}
 
-			i = src.PixOffset(srcX+1, srcY)
-			r2, g2, b2, a2 := src.Pix[i+0], src.Pix[i+1], src.Pix[i+2], src.Pix[i+3]
+			var k, sumk, r, g, b, a float64
+			var i int
 
-			i = src.PixOffset(srcX+1, srcY+1)
-			r3, g3, b3, a3 := src.Pix[i+0], src.Pix[i+1], src.Pix[i+2], src.Pix[i+3]
+			// calculate combined rgba values for each column according to weights
+			for x := startX; x <= endX; x++ {
 
-			i = src.PixOffset(srcX, srcY+1)
-			r4, g4, b4, a4 := src.Pix[i+0], src.Pix[i+1], src.Pix[i+2], src.Pix[i+3]
+				r, g, b, a, sumk = 0.0, 0.0, 0.0, 0.0, 0.0
+				for y := startY; y <= endY; y++ {
+					k = coefs[y-startY]
+					sumk += k
+					i = src.PixOffset(x, y)
+					r += float64(src.Pix[i+0]) * k
+					g += float64(src.Pix[i+1]) * k
+					b += float64(src.Pix[i+2]) * k
+					a += float64(src.Pix[i+3]) * k
+				}
 
-			r := uint8(z1*float64(r1) + z2*float64(r2) + z3*float64(r3) + z4*float64(r4) + 0.5)
-			g := uint8(z1*float64(g1) + z2*float64(g2) + z3*float64(g3) + z4*float64(g4) + 0.5)
-			b := uint8(z1*float64(b1) + z2*float64(b2) + z3*float64(b3) + z4*float64(b4) + 0.5)
-			a := uint8(z1*float64(a1) + z2*float64(a2) + z3*float64(a3) + z4*float64(a4) + 0.5)
+				i = (x - startX) * 4
+				xvals[i+0] = r / sumk
+				xvals[i+1] = g / sumk
+				xvals[i+2] = b / sumk
+				xvals[i+3] = a / sumk
+			}
+
+			// calculate final rgba values
+			r, g, b, a, sumk = 0.0, 0.0, 0.0, 0.0, 0.0
+			for x := startX; x <= endX; x++ {
+				k = antialiasFilter((fx - float64(x)) / radiusX)
+				sumk += k
+				i = (x - startX) * 4
+				r += xvals[i+0] * k
+				g += xvals[i+1] * k
+				b += xvals[i+2] * k
+				a += xvals[i+3] * k
+			}
+
+			r = math.Min(r/sumk, 255.0)
+			g = math.Min(g/sumk, 255.0)
+			b = math.Min(b/sumk, 255.0)
+			a = math.Min(a/sumk, 255.0)
 
 			i = dst.PixOffset(dstX, dstY)
-			dst.Pix[i+0], dst.Pix[i+1], dst.Pix[i+2], dst.Pix[i+3] = r, g, b, a
+			dst.Pix[i+0], dst.Pix[i+1], dst.Pix[i+2], dst.Pix[i+3] = uint8(r+0.5), uint8(g+0.5), uint8(b+0.5), uint8(a+0.5)
 		}
 	}
-
 	return dst
 }
 
