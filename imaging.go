@@ -504,10 +504,10 @@ func Fit(img image.Image, maxW, maxH int) draw.Image {
 	var newW, newH int
 	if srcAspectRatio > maxAspectRatio {
 		newW = maxW
-		newH = int(srcAspectRatio / float64(newW))
+		newH = int(float64(newW) / srcAspectRatio)
 	} else {
 		newH = maxH
-		newW = int(srcAspectRatio * float64(newH))
+		newW = int(float64(newH) * srcAspectRatio)
 	}
 
 	return Resize(img, newW, newH)
