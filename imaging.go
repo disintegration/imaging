@@ -298,12 +298,16 @@ func antialiasFilter(x float64) float64 {
 	return 0
 }
 
-// Resizes image img to width=dstW and height=dstH
+// Resizes image img to a specified size (dstW x dstH)
+// if one of dstW or dstH is 0, the image aspect ratio is preserved
 func Resize(img image.Image, dstW, dstH int) draw.Image {
 	// Antialiased resize algorithm. The quality is good, especially at downsizing, 
 	// but the speed is not too good, some optimisations are needed.
 
-	if dstW <= 0 || dstH <= 0 {
+	if dstW < 0 || dstH < 0 {
+		return &image.RGBA{}
+	}
+	if dstW == 0 && dstH == 0 {
 		return &image.RGBA{}
 	}
 
@@ -317,6 +321,16 @@ func Resize(img image.Image, dstW, dstH int) draw.Image {
 
 	if srcW <= 0 || srcH <= 0 {
 		return &image.RGBA{}
+	}
+
+	// if new width or height is 0 then preserve aspect ratio, minimum 1px  
+	if dstW == 0 {
+		tmpW := float64(dstH) * float64(srcW) / float64(srcH)
+		dstW = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+	}
+	if dstH == 0 {
+		tmpH := float64(dstW) * float64(srcH) / float64(srcW)
+		dstH = int(math.Max(1.0, math.Floor(tmpH+0.5)))
 	}
 
 	src := convertToRGBA(img)
@@ -408,78 +422,6 @@ func Resize(img image.Image, dstW, dstH int) draw.Image {
 	return dst
 }
 
-// Scales image with given scale factor, keeps aspect ratio.
-func Scale(img image.Image, scaleFactor float64) draw.Image {
-	if scaleFactor <= 0.0 {
-		return &image.RGBA{}
-	}
-
-	if scaleFactor == 1.0 {
-		return Copy(img)
-	}
-
-	srcBounds := img.Bounds()
-	srcW := srcBounds.Dx()
-	srcH := srcBounds.Dy()
-
-	if srcW <= 0 || srcH <= 0 {
-		return &image.RGBA{}
-	}
-
-	dstW := int(float64(srcW) * scaleFactor)
-	dstH := int(float64(srcH) * scaleFactor)
-
-	return Resize(img, dstW, dstH)
-}
-
-// Scales image  to given width, keeps aspect ratio.
-func ScaleToWidth(img image.Image, dstW int) draw.Image {
-	if dstW <= 0 {
-		return &image.RGBA{}
-	}
-
-	srcBounds := img.Bounds()
-	srcW := srcBounds.Dx()
-	srcH := srcBounds.Dy()
-
-	if srcW <= 0 || srcH <= 0 {
-		return &image.RGBA{}
-	}
-
-	if dstW == srcW {
-		return Copy(img)
-	}
-
-	srcAspectRatio := float64(srcW) / float64(srcH)
-	dstH := int(float64(dstW) / srcAspectRatio)
-
-	return Resize(img, dstW, dstH)
-}
-
-// Scales image  to given height, keeps aspect ratio.
-func ScaleToHeight(img image.Image, dstH int) draw.Image {
-	if dstH <= 0 {
-		return &image.RGBA{}
-	}
-
-	srcBounds := img.Bounds()
-	srcW := srcBounds.Dx()
-	srcH := srcBounds.Dy()
-
-	if srcW <= 0 || srcH <= 0 {
-		return &image.RGBA{}
-	}
-
-	if dstH == srcH {
-		return Copy(img)
-	}
-
-	srcAspectRatio := float64(srcW) / float64(srcH)
-	dstW := int(float64(dstH) * srcAspectRatio)
-
-	return Resize(img, dstW, dstH)
-}
-
 // Scales down image to fit given maximum width and height, keeps aspect ratio.
 func Fit(img image.Image, maxW, maxH int) draw.Image {
 	if maxW <= 0 || maxH <= 0 {
@@ -513,7 +455,7 @@ func Fit(img image.Image, maxW, maxH int) draw.Image {
 	return Resize(img, newW, newH)
 }
 
-// Scales image up or down and crops to exact given size.
+// Scales image up or down and crops to a specified size.
 func Thumbnail(img image.Image, thumbW, thumbH int) draw.Image {
 	if thumbW <= 0 || thumbH <= 0 {
 		return &image.RGBA{}
@@ -532,9 +474,9 @@ func Thumbnail(img image.Image, thumbW, thumbH int) draw.Image {
 
 	var tmp image.Image
 	if srcAspectRatio > thumbAspectRatio {
-		tmp = ScaleToHeight(img, thumbH)
+		tmp = Resize(img, 0, thumbH)
 	} else {
-		tmp = ScaleToWidth(img, thumbW)
+		tmp = Resize(img, thumbW, 0)
 	}
 
 	return CropCenter(tmp, thumbW, thumbH)
