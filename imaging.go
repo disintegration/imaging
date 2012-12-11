@@ -342,8 +342,12 @@ func Resize(img image.Image, width, height int) draw.Image {
 	dy := float64(srcH) / float64(dstH)
 	dx := float64(srcW) / float64(dstW)
 
-	radiusX := math.Ceil(dx / 1.5)
-	radiusY := math.Ceil(dy / 1.5)
+	radiusX := dx / 2.0
+	radiusY := dy / 2.0
+
+	// increase the radius of antialiasing a little to get more smooth result
+	radiusX = math.Ceil(radiusX * 1.25)
+	radiusY = math.Ceil(radiusY * 1.25)
 
 	coefs := make([]float64, int(radiusY+1)*2*4)
 	xvals := make([]float64, int(radiusX+1)*2*4)
