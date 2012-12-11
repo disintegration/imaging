@@ -45,7 +45,7 @@ func main() {
     dst = imaging.Thumbnail(src, 100, 100) // resize and crop the image to make a 100x100 thumbnail
     
     dst = imaging.Crop(src, image.Rect(50, 50, 100, 100)) // cut out a rectangular region from the image
-    dst = imaging.CropCenter(src, 200, 100) // cut out a 200x200 region from the center of the image
+    dst = imaging.CropCenter(src, 200, 100) // cut out a 200x100 px region from the center of the image
     dst = imaging.Paste(dst, src, image.Pt(50, 50)) // paste the src image to the dst image at the given position
     dst = imaging.PasteCenter(dst, src) // paste the src image to the center of the dst image
 
