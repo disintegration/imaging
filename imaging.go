@@ -1,3 +1,5 @@
+// Package imaging provides basic image manipulation functions.
+
 package imaging
 
 import (
@@ -13,7 +15,7 @@ import (
 	"strings"
 )
 
-// Loads image from file. Returns image.Image
+// Open loads an image from file
 func Open(filename string) (img image.Image, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -28,7 +30,7 @@ func Open(filename string) (img image.Image, err error) {
 	return
 }
 
-// Saves image img to file with given filename. Format parameter may be either "jpeg" or "png"
+// Save saves the image to file with the specified filename. Format parameter can be "jpeg" or "png".
 func Save(img image.Image, filename string, format string) (err error) {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -48,7 +50,7 @@ func Save(img image.Image, filename string, format string) (err error) {
 	return
 }
 
-// Creates a new image with given size and fills it with given color. 
+// New creates a new image with the specified width and height, and fills it with the specified color. 
 func New(width, height int, fillColor color.Color) draw.Image {
 	dst := image.NewRGBA(image.Rect(0, 0, width, height))
 	unf := image.NewUniform(fillColor)
@@ -56,7 +58,7 @@ func New(width, height int, fillColor color.Color) draw.Image {
 	return dst
 }
 
-// Returns a copy of img. New image bounds will start at (0, 0) 
+// Copy returns a copy of the img. New image bounds will be (0, 0)-(width, height).
 func Copy(img image.Image) draw.Image {
 	imgBounds := img.Bounds()
 	newBounds := imgBounds.Sub(imgBounds.Min) // new image bounds start at (0, 0)
@@ -65,7 +67,7 @@ func Copy(img image.Image) draw.Image {
 	return dst
 }
 
-// This function is used internally to check if image type is image.RGBA
+// This function is used internally to check if the image type is image.RGBA
 // If not - converts any image type to image.RGBA for faster pixel access
 func convertToRGBA(src image.Image) *image.RGBA {
 	var dst *image.RGBA
@@ -82,15 +84,19 @@ func convertToRGBA(src image.Image) *image.RGBA {
 	return dst
 }
 
-// Returns a copy of rectangular area of img. 
+// Crop cuts out a rectangular region with the specified bounds
+// from the image and returns the cropped image.
 func Crop(img image.Image, rect image.Rectangle) draw.Image {
 	src := convertToRGBA(img)
 	sub := src.SubImage(rect)
 	return Copy(sub) // New image Bounds().Min point will be (0, 0)
 }
 
-// Returns a copy of rectangular area of given size from the center of img
-func CropCenter(img image.Image, cropW, cropH int) draw.Image {
+// Crop cuts out a rectangular region with the specified size
+// from the center of the image and returns the cropped image.
+func CropCenter(img image.Image, width, height int) draw.Image {
+	cropW, cropH := width, height
+
 	srcBounds := img.Bounds()
 	srcW := srcBounds.Dx()
 	srcH := srcBounds.Dy()
@@ -108,7 +114,7 @@ func CropCenter(img image.Image, cropW, cropH int) draw.Image {
 	return Crop(img, image.Rect(x0, y0, x1, y1))
 }
 
-// Pastes image src to image img at given position. Returns resulting image.
+// Paste pastes the src image to the img image at the specified position and returns the combined image.
 func Paste(img, src image.Image, pos image.Point) draw.Image {
 	dst := Copy(img)                     // copied image bounds start at (0, 0)
 	startPt := pos.Sub(img.Bounds().Min) // so we should translate start point
@@ -117,7 +123,7 @@ func Paste(img, src image.Image, pos image.Point) draw.Image {
 	return dst
 }
 
-// Pastes image src to the center of image img. Returns resulting image.
+// Paste pastes the src image to the center of the img image and returns the combined image.
 func PasteCenter(img, src image.Image) draw.Image {
 	imgBounds := img.Bounds()
 	imgW := imgBounds.Dx()
@@ -134,7 +140,7 @@ func PasteCenter(img, src image.Image) draw.Image {
 	return Paste(img, src, image.Pt(x0, y0))
 }
 
-// Rotates image img by 90 degrees clockwise
+// Rotate90 rotates the image 90 degrees clockwise and returns the transformed image.
 func Rotate90(img image.Image) draw.Image {
 	src := convertToRGBA(img)
 	srcBounds := src.Bounds()
@@ -162,10 +168,9 @@ func Rotate90(img image.Image) draw.Image {
 	}
 
 	return dst
-
 }
 
-// Rotates image img by 180 degrees clockwise
+// Rotate180 rotates the image 180 degrees clockwise and returns the transformed image.
 func Rotate180(img image.Image) draw.Image {
 	src := convertToRGBA(img)
 	srcBounds := src.Bounds()
@@ -193,10 +198,9 @@ func Rotate180(img image.Image) draw.Image {
 	}
 
 	return dst
-
 }
 
-// Rotates image img by 270 degrees clockwise
+// Rotate270 rotates the image 270 degrees clockwise and returns the transformed image.
 func Rotate270(img image.Image) draw.Image {
 	src := convertToRGBA(img)
 	srcBounds := src.Bounds()
@@ -224,10 +228,9 @@ func Rotate270(img image.Image) draw.Image {
 	}
 
 	return dst
-
 }
 
-// Flips image img horizontally (left-to-right)
+// FlipH flips the image horizontally (from left to right) and returns the transformed image.
 func FlipH(img image.Image) draw.Image {
 	src := convertToRGBA(img)
 	srcBounds := src.Bounds()
@@ -255,10 +258,9 @@ func FlipH(img image.Image) draw.Image {
 	}
 
 	return dst
-
 }
 
-// Flips image img vertically (top-to-bottom)
+// FlipV flips the image vertically (from top to bottom) and returns the transformed image.
 func FlipV(img image.Image) draw.Image {
 	src := convertToRGBA(img)
 	srcBounds := src.Bounds()
@@ -286,10 +288,9 @@ func FlipV(img image.Image) draw.Image {
 	}
 
 	return dst
-
 }
 
-// Filter for antialias resizing is a basic quadratic function
+// Antialias filter for Resize is a basic quadratic function.
 func antialiasFilter(x float64) float64 {
 	x = math.Abs(x)
 	if x <= 1.0 {
@@ -298,11 +299,13 @@ func antialiasFilter(x float64) float64 {
 	return 0
 }
 
-// Resizes image img to a specified size (dstW x dstH)
-// if one of dstW or dstH is 0, the image aspect ratio is preserved
-func Resize(img image.Image, dstW, dstH int) draw.Image {
+// Resize resizes the image to the specified width and height and returns the transformed image.
+// If one of dstW or dstH is 0, the image aspect ratio is preserved.
+func Resize(img image.Image, width, height int) draw.Image {
 	// Antialiased resize algorithm. The quality is good, especially at downsizing, 
 	// but the speed is not too good, some optimisations are needed.
+
+	dstW, dstH := width, height
 
 	if dstW < 0 || dstH < 0 {
 		return &image.RGBA{}
@@ -416,14 +419,19 @@ func Resize(img image.Image, dstW, dstH int) draw.Image {
 			a = math.Min(a/sumk, 255.0)
 
 			i = dst.PixOffset(dstX, dstY)
-			dst.Pix[i+0], dst.Pix[i+1], dst.Pix[i+2], dst.Pix[i+3] = uint8(r+0.5), uint8(g+0.5), uint8(b+0.5), uint8(a+0.5)
+			dst.Pix[i+0] = uint8(r + 0.5)
+			dst.Pix[i+1] = uint8(g + 0.5)
+			dst.Pix[i+2] = uint8(b + 0.5)
+			dst.Pix[i+3] = uint8(a + 0.5)
 		}
 	}
 	return dst
 }
 
-// Scales down image to fit given maximum width and height, keeps aspect ratio.
-func Fit(img image.Image, maxW, maxH int) draw.Image {
+// Fit scales down the image to fit the specified maximum width and height and returns the transformed image.
+func Fit(img image.Image, width, height int) draw.Image {
+	maxW, maxH := width, height
+
 	if maxW <= 0 || maxH <= 0 {
 		return &image.RGBA{}
 	}
@@ -455,8 +463,10 @@ func Fit(img image.Image, maxW, maxH int) draw.Image {
 	return Resize(img, newW, newH)
 }
 
-// Scales image up or down and crops to a specified size.
-func Thumbnail(img image.Image, thumbW, thumbH int) draw.Image {
+// Thumbnail scales the image up or down, crops it to the specified size and returns the transformed image.
+func Thumbnail(img image.Image, width, height int) draw.Image {
+	thumbW, thumbH := width, height
+
 	if thumbW <= 0 || thumbH <= 0 {
 		return &image.RGBA{}
 	}
