@@ -7,9 +7,13 @@ This package is based on the standard Go image package. All the image
 manipulation functions provided by the package return a new `draw.Image`.
 Currently, `*image.RGBA` type is used to build new images.
 
-### Installation
+###Installation
 
     go get github.com/disintegration/imaging
+    
+### Documentation
+
+http://godoc.org/github.com/disintegration/imaging
     
 ### Usage
 
