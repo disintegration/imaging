@@ -1,5 +1,9 @@
-// Package imaging provides basic image manipulation functions.
-
+// Package imaging provides basic image manipulation functions as well as 
+// simplified image loading and saving.
+// 
+// This package is based on the standard Go image package. All the image 
+// manipulation functions provided by the package return a new draw.Image.
+// Currently, *image.RGBA type is used to build new images.
 package imaging
 
 import (
@@ -345,7 +349,7 @@ func Resize(img image.Image, width, height int) draw.Image {
 	radiusX := dx / 2.0
 	radiusY := dy / 2.0
 
-	// increase the radius of antialiasing a little to get more smooth result
+	// increase the radius of antialiasing a little to produce smoother output image
 	radiusX = math.Ceil(radiusX * 1.25)
 	radiusY = math.Ceil(radiusY * 1.25)
 

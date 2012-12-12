@@ -1,11 +1,11 @@
 # Imaging
 
-Simple Go image processing package. 
+Package imaging provides basic image manipulation functions as well as 
+simplified image loading and saving.
 
-Implements a number of basic image manipulation functions as well as simplified image loading, creation and saving. 
-All the image manipulation functions are not in-place, they return a new image with bounds (0, 0) - (Width, Height)
-This package integrates with standard "image" package well: most functions take image.Image interface as an argument 
-and return draw.Image interface.
+This package is based on the standard Go image package. All the image 
+manipulation functions provided by the package return a new `draw.Image`.
+Currently, `*image.RGBA` type is used to build new images.
 
 ### Installation
 
