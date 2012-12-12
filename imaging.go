@@ -304,7 +304,7 @@ func antialiasFilter(x float64) float64 {
 }
 
 // Resize resizes the image to the specified width and height and returns the transformed image.
-// If one of dstW or dstH is 0, the image aspect ratio is preserved.
+// If one of width or height is 0, the image aspect ratio is preserved.
 func Resize(img image.Image, width, height int) draw.Image {
 	// Antialiased resize algorithm. The quality is good, especially at downsizing, 
 	// but the speed is not too good, some optimisations are needed.
