@@ -45,7 +45,7 @@ func Save(img image.Image, filename string, format string) (err error) {
 	formatLower := strings.ToLower(format)
 	switch formatLower {
 	case "jpeg", "jpg":
-		err = jpeg.Encode(file, img, nil)
+		err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
 	case "png":
 		err = png.Encode(file, img)
 	default:
