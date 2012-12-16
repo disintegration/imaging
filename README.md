@@ -4,8 +4,7 @@ Package imaging provides basic image manipulation functions as well as
 simplified image loading and saving.
 
 This package is based on the standard Go image package. All the image 
-manipulation functions provided by the package return a new `draw.Image`.
-Currently, `*image.RGBA` type is used to build new images.
+manipulation functions provided by the package return a new `*image.NRGBA`.
 
 ###Installation
 
@@ -32,7 +31,7 @@ func main() {
     var dst draw.Image
     
     dst = imaging.New(800, 600, color.NRGBA(255, 0, 0, 255)) // create a new 800x600px image filled with red color
-    dst = imaging.Copy(src) // copy the image
+    dst = imaging.Clone(src) // make a copy of the image
     
     dst = imaging.Rotate90(src) // rotate 90 degrees clockwise 
     dst = imaging.Rotate180(src) // rotate 180 degrees clockwise
