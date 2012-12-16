@@ -1,10 +1,19 @@
 # Imaging
 
-Package imaging provides basic image manipulation functions as well as 
-simplified image loading and saving.
-
+Package imaging provides basic image manipulation functions 
+(resize, rotate, crop, etc.) as well as simplified image loading and saving.
 This package is based on the standard Go image package. All the image 
-manipulation functions provided by the package return a new `*image.NRGBA`.
+manipulation functions provided by the package return a new image of 
+`*image.NRGBA` type. 
+
+###Recent changes
+
+- All the image manipulation functions now return `*image.NRGBA` instead of
+`draw.Image`.
+- `Copy()` function renamed to `Clone()`. 
+This function also can be used to convert any image type to *image.NRGBA for
+fast pixel access. (`.Pix` slice, `.PixOffset` method)
+
 
 ###Installation
 
