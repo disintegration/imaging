@@ -31,13 +31,12 @@ package main
 import (
     "github.com/disintegration/imaging"
     "image"
-    "image/color"
-    "image/draw"   
+    "image/color"  
 )
 
 func main() {
     src, _ := imaging.Open("1.png") // load an image from file (returns image.Image interface)
-    var dst draw.Image
+    var dst image.Image
     
     dst = imaging.New(800, 600, color.NRGBA(255, 0, 0, 255)) // create a new 800x600px image filled with red color
     dst = imaging.Clone(src) // make a copy of the image
