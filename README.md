@@ -8,6 +8,8 @@ manipulation functions provided by the package return a new image of
 
 ###Recent changes
 
+- Format parameter removed from `Save` function. Now the format is determined
+from the filename extension, `jpg` (or `jpeg`) and `png` are supported.
 - All the image manipulation functions now return `*image.NRGBA` instead of
 `draw.Image`.
 - `Copy()` function renamed to `Clone()`. 
@@ -31,12 +33,12 @@ package main
 import (
     "github.com/disintegration/imaging"
     "image"
-    "image/color"  
+    "image/color"
 )
 
 func main() {
-    src, _ := imaging.Open("1.png") // load an image from file (returns image.Image interface)
-    var dst image.Image
+    src, _ := imaging.Open("src.png") // load an image from file (returns image.Image interface)
+    var dst *image.NRGBA
     
     dst = imaging.New(800, 600, color.NRGBA(255, 0, 0, 255)) // create a new 800x600px image filled with red color
     dst = imaging.Clone(src) // make a copy of the image
@@ -60,6 +62,6 @@ func main() {
     dst = imaging.Paste(dst, src, image.Pt(50, 50)) // paste the src image to the dst image at the given position
     dst = imaging.PasteCenter(dst, src) // paste the src image to the center of the dst image
 
-    imaging.Save(dst, "2.jpg", "jpeg") // save the image to file using jpeg format
+    imaging.Save(dst, "dst.jpg") // save the image to file using jpeg format
 }
 ```

@@ -14,6 +14,7 @@ import (
 	"image/png"
 	"math"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -26,29 +27,31 @@ func Open(filename string) (img image.Image, err error) {
 	defer file.Close()
 
 	img, _, err = image.Decode(file)
-	if err != nil {
-		return
-	}
 	return
 }
 
-// Save saves the image to file with the specified filename. Format parameter can be "jpeg" or "png".
-func Save(img image.Image, filename string, format string) (err error) {
+// Save saves the image to file with the specified filename. 
+// The format is determined from the filename extension, "jpg" (or "jpeg") and "png" are supported.
+func Save(img image.Image, filename string) (err error) {
+	format := strings.ToLower(filepath.Ext(filename))
+	if format != "jpg" && format != "jpeg" && format != "png" {
+		err = fmt.Errorf("unknown image format: %s", format)
+		return
+	}
+
 	file, err := os.Create(filename)
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	formatLower := strings.ToLower(format)
-	switch formatLower {
-	case "jpeg", "jpg":
+	switch format {
+	case "jpg", "jpeg":
 		err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
 	case "png":
 		err = png.Encode(file, img)
-	default:
-		err = fmt.Errorf("unknown image format: %s", format)
 	}
+
 	return
 }
 
@@ -155,7 +158,6 @@ func toNRGBA(src image.Image, clone bool) *image.NRGBA {
 					dst.Pix[i+1] = uint8(uint16(src0.Pix[j+1]) * 0xff / uint16(a))
 					dst.Pix[i+2] = uint8(uint16(src0.Pix[j+2]) * 0xff / uint16(a))
 				}
-
 			}
 		}
 
@@ -182,7 +184,6 @@ func toNRGBA(src image.Image, clone bool) *image.NRGBA {
 					dst.Pix[i+1] = uint8(uint16(src0.Pix[j+2]) * 0xff / uint16(a))
 					dst.Pix[i+2] = uint8(uint16(src0.Pix[j+4]) * 0xff / uint16(a))
 				}
-
 			}
 		}
 
@@ -641,6 +642,7 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 			dst.Pix[i+3] = uint8(a + 0.5)
 		}
 	}
+
 	return dst
 }
 
