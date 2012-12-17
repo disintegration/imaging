@@ -40,7 +40,7 @@ func main() {
     src, _ := imaging.Open("src.png") // load an image from file (returns image.Image interface)
     var dst *image.NRGBA
     
-    dst = imaging.New(800, 600, color.NRGBA(255, 0, 0, 255)) // create a new 800x600px image filled with red color
+    dst = imaging.New(800, 600, color.NRGBA{255, 0, 0, 255}) // create a new 800x600px image filled with red color
     dst = imaging.Clone(src) // make a copy of the image
     
     dst = imaging.Rotate90(src) // rotate 90 degrees clockwise 
