@@ -47,11 +47,25 @@ func Save(img image.Image, filename string) (err error) {
 
 	switch format {
 	case ".jpg", ".jpeg":
-		err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
+		var rgba *image.RGBA
+		if nrgba, ok := img.(*image.NRGBA); ok {
+			if nrgba.Opaque() {
+				rgba = &image.RGBA{
+					Pix:    nrgba.Pix,
+					Stride: nrgba.Stride,
+					Rect:   nrgba.Rect,
+				}
+			}
+		}
+		if rgba != nil {
+			err = jpeg.Encode(file, rgba, &jpeg.Options{Quality: 95})
+		} else {
+			err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
+		}
+
 	case ".png":
 		err = png.Encode(file, img)
 	}
-
 	return
 }
 
