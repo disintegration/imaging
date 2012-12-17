@@ -34,7 +34,7 @@ func Open(filename string) (img image.Image, err error) {
 // The format is determined from the filename extension, "jpg" (or "jpeg") and "png" are supported.
 func Save(img image.Image, filename string) (err error) {
 	format := strings.ToLower(filepath.Ext(filename))
-	if format != "jpg" && format != "jpeg" && format != "png" {
+	if format != ".jpg" && format != ".jpeg" && format != ".png" {
 		err = fmt.Errorf("unknown image format: %s", format)
 		return
 	}
@@ -46,9 +46,9 @@ func Save(img image.Image, filename string) (err error) {
 	defer file.Close()
 
 	switch format {
-	case "jpg", "jpeg":
+	case ".jpg", ".jpeg":
 		err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
-	case "png":
+	case ".png":
 		err = png.Encode(file, img)
 	}
 
