@@ -3,7 +3,8 @@
 Package imaging provides basic image manipulation functions 
 (resize, rotate, crop, etc.) as well as simplified image loading and saving.
 This package is based on the standard Go image package. All the image 
-manipulation functions provided by the package return a new image of 
+manipulation functions provided by the package take any type of image that 
+implements image.Image interface, and return a new image of 
 `*image.NRGBA` type (32 bit RGBA colors, not premultiplied by alpha). 
 
 ###Recent changes
@@ -62,6 +63,6 @@ func main() {
     dst = imaging.Paste(dst, src, image.Pt(50, 50)) // paste the src image to the dst image at the given position
     dst = imaging.PasteCenter(dst, src) // paste the src image to the center of the dst image
 
-    imaging.Save(dst, "dst.jpg") // save the image to file using jpeg format
+    imaging.Save(dst, "dst.jpg") // save the image to file
 }
 ```
