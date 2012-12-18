@@ -527,9 +527,6 @@ func antialiasFilter(x float64) float64 {
 // Resize resizes the image to the specified width and height and returns the transformed image.
 // If one of width or height is 0, the image aspect ratio is preserved.
 func Resize(img image.Image, width, height int) *image.NRGBA {
-	// Antialiased resize algorithm. The quality is good, especially at downsizing, 
-	// but the speed is not too good, some optimisations are needed.
-
 	dstW, dstH := width, height
 
 	if dstW < 0 || dstH < 0 {
@@ -574,8 +571,7 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 	radiusX = math.Ceil(radiusX * 1.25)
 	radiusY = math.Ceil(radiusY * 1.25)
 
-	coefs := make([]float64, int(radiusY+1)*2*4)
-	xvals := make([]float64, int(radiusX+1)*2*4)
+	weightsX := make([]float64, int(radiusX+2)*2)
 
 	for dstY := 0; dstY < dstH; dstY++ {
 		fy := float64(srcMinY) + (float64(dstY)+0.5)*dy - 0.5
@@ -601,55 +597,45 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 				endY = srcMaxY - 1
 			}
 
-			// cache y weight coefficients
-			for y := startY; y <= endY; y++ {
-				coefs[y-startY] = antialiasFilter((fy - float64(y)) / radiusY)
+			// cache weights for xs
+			for x := startX; x <= endX; x++ {
+				weightsX[x-startX] = antialiasFilter((float64(x) - fx) / radiusX)
 			}
 
-			var k, sumk, r, g, b, a float64
-			var i int
+			weightSum := 0.0
+			r, g, b, a := 0.0, 0.0, 0.0, 0.0
 
-			// Calculate combined RGBA values for each column according to weights:
-			for x := startX; x <= endX; x++ {
+			for y := startY; y <= endY; y++ {
 
-				r, g, b, a, sumk = 0.0, 0.0, 0.0, 0.0, 0.0
-				for y := startY; y <= endY; y++ {
-					k = coefs[y-startY]
-					sumk += k
-					i = src.PixOffset(x, y)
-					r += float64(src.Pix[i+0]) * k
-					g += float64(src.Pix[i+1]) * k
-					b += float64(src.Pix[i+2]) * k
-					a += float64(src.Pix[i+3]) * k
+				weightSumTmp := 0.0
+				rTmp, gTmp, bTmp, aTmp := 0.0, 0.0, 0.0, 0.0
+
+				for x := startX; x <= endX; x++ {
+					weight := weightsX[x-startX]
+					weightSumTmp += weight
+
+					i := src.PixOffset(x, y)
+					rTmp += float64(src.Pix[i+0]) * weight
+					gTmp += float64(src.Pix[i+1]) * weight
+					bTmp += float64(src.Pix[i+2]) * weight
+					aTmp += float64(src.Pix[i+3]) * weight
 				}
 
-				i = (x - startX) * 4
-				xvals[i+0] = r / sumk
-				xvals[i+1] = g / sumk
-				xvals[i+2] = b / sumk
-				xvals[i+3] = a / sumk
+				weight := antialiasFilter((float64(y) - fy) / radiusY)
+				weightSum += weight
+				r += (rTmp / weightSumTmp) * weight
+				g += (gTmp / weightSumTmp) * weight
+				b += (bTmp / weightSumTmp) * weight
+				a += (aTmp / weightSumTmp) * weight
 
 			}
 
-			// calculate final rgba values
-			r, g, b, a, sumk = 0.0, 0.0, 0.0, 0.0, 0.0
-			for x := startX; x <= endX; x++ {
-				k = antialiasFilter((fx - float64(x)) / radiusX)
-				sumk += k
-				i = (x - startX) * 4
+			r = math.Min(r/weightSum, 255.0)
+			g = math.Min(g/weightSum, 255.0)
+			b = math.Min(b/weightSum, 255.0)
+			a = math.Min(a/weightSum, 255.0)
 
-				r += xvals[i+0] * k
-				g += xvals[i+1] * k
-				b += xvals[i+2] * k
-				a += xvals[i+3] * k
-			}
-
-			r = math.Min(r/sumk, 255.0)
-			g = math.Min(g/sumk, 255.0)
-			b = math.Min(b/sumk, 255.0)
-			a = math.Min(a/sumk, 255.0)
-
-			i = dst.PixOffset(dstX, dstY)
+			i := dst.PixOffset(dstX, dstY)
 			dst.Pix[i+0] = uint8(r + 0.5)
 			dst.Pix[i+1] = uint8(g + 0.5)
 			dst.Pix[i+2] = uint8(b + 0.5)
