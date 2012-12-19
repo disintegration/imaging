@@ -2,7 +2,9 @@
 // (resize, rotate, crop, etc.) as well as simplified image loading and saving.
 // 
 // This package is based on the standard Go image package. All the image 
-// manipulation functions provided by the package return a new *image.NRGBA.
+// manipulation functions provided by the package take any image type that 
+// implements image.Image interface, and return a new image of 
+// *image.NRGBA type (32 bit RGBA colors, not premultiplied by alpha).
 package imaging
 
 import (
@@ -515,7 +517,7 @@ func FlipV(img image.Image) *image.NRGBA {
 	return dst
 }
 
-// Antialias filter for Resize is a basic quadratic function.
+// Anti-aliasing filter for Resize is a cubic function.
 func antialiasFilter(x float64) float64 {
 	x = math.Abs(x)
 	if x <= 1.0 {
@@ -623,11 +625,11 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 
 				weight := antialiasFilter((float64(y) - fy) / radiusY)
 				weightSum += weight
+
 				r += (rTmp / weightSumTmp) * weight
 				g += (gTmp / weightSumTmp) * weight
 				b += (bTmp / weightSumTmp) * weight
 				a += (aTmp / weightSumTmp) * weight
-
 			}
 
 			r = math.Min(r/weightSum, 255.0)

@@ -3,8 +3,8 @@
 Package imaging provides basic image manipulation functions 
 (resize, rotate, crop, etc.) as well as simplified image loading and saving.
 This package is based on the standard Go image package. All the image 
-manipulation functions provided by the package take any type of image that 
-implements image.Image interface, and return a new image of 
+manipulation functions provided by the package take any image type that 
+implements `image.Image` interface, and return a new image of 
 `*image.NRGBA` type (32 bit RGBA colors, not premultiplied by alpha). 
 
 ###Recent changes
