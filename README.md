@@ -9,6 +9,8 @@ implements `image.Image` interface, and return a new image of
 
 ###Recent changes
 
+- New function: Overlay. This function can be used to draw one (partially 
+transparent) image over another, to blend two images, etc.
 - Format parameter removed from `Save` function. Now the format is determined
 from the filename extension, `jpg` (or `jpeg`) and `png` are supported.
 - All the image manipulation functions now return `*image.NRGBA` instead of
@@ -62,7 +64,10 @@ func main() {
     dst = imaging.CropCenter(src, 200, 100) // cut out a 200x100 px region from the center of the image
     dst = imaging.Paste(dst, src, image.Pt(50, 50)) // paste the src image to the dst image at the given position
     dst = imaging.PasteCenter(dst, src) // paste the src image to the center of the dst image
-
+    
+    // draw one image over another at the given position and with the given opacity (from 0.0 to 1.0)
+    dst = imaging.Overlay(dst, src, image.Pt(50, 30), 1.0)
+    
     imaging.Save(dst, "dst.jpg") // save the image to file
 }
 ```
