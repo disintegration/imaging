@@ -619,20 +619,25 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 
 	weightsX := make([]float64, int(radiusX+2)*2)
 
-	for dstY := 0; dstY < dstH; dstY++ {
-		fy := float64(srcMinY) + (float64(dstY)+0.5)*dy - 0.5
+	for dstX := 0; dstX < dstW; dstX++ {
+		fx := float64(srcMinX) + (float64(dstX)+0.5)*dx - 0.5
 
-		for dstX := 0; dstX < dstW; dstX++ {
-			fx := float64(srcMinX) + (float64(dstX)+0.5)*dx - 0.5
+		startX := int(math.Ceil(fx - radiusX))
+		if startX < srcMinX {
+			startX = srcMinX
+		}
+		endX := int(math.Floor(fx + radiusX))
+		if endX > srcMaxX-1 {
+			endX = srcMaxX - 1
+		}
 
-			startX := int(math.Ceil(fx - radiusX))
-			if startX < srcMinX {
-				startX = srcMinX
-			}
-			endX := int(math.Floor(fx + radiusX))
-			if endX > srcMaxX-1 {
-				endX = srcMaxX - 1
-			}
+		// cache weights for xs
+		for x := startX; x <= endX; x++ {
+			weightsX[x-startX] = antialiasFilter((float64(x) - fx) / radiusX)
+		}
+
+		for dstY := 0; dstY < dstH; dstY++ {
+			fy := float64(srcMinY) + (float64(dstY)+0.5)*dy - 0.5
 
 			startY := int(math.Ceil(fy - radiusY))
 			if startY < srcMinY {
@@ -641,11 +646,6 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 			endY := int(math.Floor(fy + radiusY))
 			if endY > srcMaxY-1 {
 				endY = srcMaxY - 1
-			}
-
-			// cache weights for xs
-			for x := startX; x <= endX; x++ {
-				weightsX[x-startX] = antialiasFilter((float64(x) - fx) / radiusX)
 			}
 
 			weightSum := 0.0
