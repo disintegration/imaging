@@ -1,10 +1,11 @@
-// Package imaging provides basic image manipulation functions 
-// (resize, rotate, crop, etc.) as well as simplified image loading and saving.
+// Package imaging provides basic image manipulation functions
+// (resize, rotate, flip, crop, etc.) as well as simplified image loading and saving.
 // 
 // This package is based on the standard Go image package. All the image 
 // manipulation functions provided by the package take any image type that 
 // implements image.Image interface, and return a new image of 
 // *image.NRGBA type (32 bit RGBA colors, not premultiplied by alpha).
+//
 package imaging
 
 import (
@@ -369,7 +370,16 @@ func PasteCenter(img, src image.Image) *image.NRGBA {
 
 // Overlay draws the source image over the background image at given position
 // and returns the combined image. Opacity parameter is the opacity of the source
-// image layer, used to compose the images, it must be from 0.0 to 1.0. 
+// image layer, used to compose the images, it must be from 0.0 to 1.0.
+//
+// Usage examples:
+//
+//		// draw the sprite over the background at position (50, 50)
+//		dstImage := imaging.Overlay(backgroundImage, spriteImage, image.Pt(50, 50), 1.0)
+//
+//		// blend two opaque images of the same size
+//		dstImage := imaging.Overlay(imageOne, imageTwo, image.Pt(0, 0), 0.5)
+//
 func Overlay(background, source image.Image, pos image.Point, opacity float64) *image.NRGBA {
 	opacity = math.Min(math.Max(opacity, 0.0), 1.0) // check: 0.0 <= opacity <= 1.0
 
@@ -561,18 +571,204 @@ func FlipV(img image.Image) *image.NRGBA {
 	return dst
 }
 
-// Anti-aliasing filter for Resize is a cubic function.
-func antialiasFilter(x float64) float64 {
-	x = math.Abs(x)
-	if x <= 1.0 {
-		return x*x*(1.4*x-2.4) + 1
+// Resize resizes the image to the specified width and height using the specified resampling
+// filter and returns the transformed image. If one of width or height is 0, the image aspect
+// ratio is preserved.
+//
+// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
+// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
+//
+// Usage example:
+//
+//		dstImage := imaging.Resize(srcImage, 800, 600, imaging.Lanczos)
+//
+func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
+	if filter.Support <= 0.0 { // nearest-neighbor special case
+		return resizeNearest(img, width, height)
 	}
-	return 0
+
+	dstW, dstH := width, height
+
+	if dstW < 0 || dstH < 0 {
+		return &image.NRGBA{}
+	}
+	if dstW == 0 && dstH == 0 {
+		return &image.NRGBA{}
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.NRGBA{}
+	}
+
+	// if new width or height is 0 then preserve aspect ratio, minimum 1px  
+	if dstW == 0 {
+		tmpW := float64(dstH) * float64(srcW) / float64(srcH)
+		dstW = int(math.Max(1.0, math.Floor(tmpW+0.5)))
+	}
+	if dstH == 0 {
+		tmpH := float64(dstW) * float64(srcH) / float64(srcW)
+		dstH = int(math.Max(1.0, math.Floor(tmpH+0.5)))
+	}
+
+	src := convertToNRGBA(img)
+	var tmp, dst *image.NRGBA
+
+	// two-pass resize 
+	if srcW != dstW {
+		tmp = resizeHorizontal(src, dstW, filter)
+	} else {
+		tmp = src
+	}
+
+	if srcH != dstH {
+		dst = resizeVertical(tmp, dstH, filter)
+	} else {
+		dst = tmp
+	}
+
+	return dst
 }
 
-// Resize resizes the image to the specified width and height and returns the transformed image.
-// If one of width or height is 0, the image aspect ratio is preserved.
-func Resize(img image.Image, width, height int) *image.NRGBA {
+func resizeHorizontal(src *image.NRGBA, width int, filter ResampleFilter) *image.NRGBA {
+	srcBounds := src.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+	srcMinX := srcBounds.Min.X
+	srcMinY := srcBounds.Min.Y
+	srcMaxX := srcBounds.Max.X
+
+	dstW := width
+	dstH := srcH
+
+	dst := image.NewNRGBA(image.Rect(0, 0, dstW, dstH))
+
+	dX := float64(srcW) / float64(dstW)
+	scaleX := math.Max(dX, 1.0)
+	rX := math.Ceil(scaleX * filter.Support)
+	weights := make([]float64, int(rX+2)*2)
+
+	for dstX := 0; dstX < dstW; dstX++ {
+		fX := float64(srcMinX) + (float64(dstX)+0.5)*dX - 0.5
+
+		startX := int(math.Ceil(fX - rX))
+		if startX < srcMinX {
+			startX = srcMinX
+		}
+		endX := int(math.Floor(fX + rX))
+		if endX > srcMaxX-1 {
+			endX = srcMaxX - 1
+		}
+
+		// cache weights
+		weightSum := 0.0
+		for x := startX; x <= endX; x++ {
+			w := filter.Kernel((float64(x) - fX) / scaleX)
+			weightSum += w
+			weights[x-startX] = w
+		}
+
+		for dstY := 0; dstY < dstH; dstY++ {
+			srcY := srcMinY + dstY
+
+			r, g, b, a := 0.0, 0.0, 0.0, 0.0
+			for x := startX; x <= endX; x++ {
+				weight := weights[x-startX]
+				i := src.PixOffset(x, srcY)
+				r += float64(src.Pix[i+0]) * weight
+				g += float64(src.Pix[i+1]) * weight
+				b += float64(src.Pix[i+2]) * weight
+				a += float64(src.Pix[i+3]) * weight
+			}
+
+			r = math.Min(math.Max(r/weightSum, 0.0), 255.0)
+			g = math.Min(math.Max(g/weightSum, 0.0), 255.0)
+			b = math.Min(math.Max(b/weightSum, 0.0), 255.0)
+			a = math.Min(math.Max(a/weightSum, 0.0), 255.0)
+
+			j := dst.PixOffset(dstX, dstY)
+			dst.Pix[j+0] = uint8(r + 0.5)
+			dst.Pix[j+1] = uint8(g + 0.5)
+			dst.Pix[j+2] = uint8(b + 0.5)
+			dst.Pix[j+3] = uint8(a + 0.5)
+		}
+	}
+
+	return dst
+}
+
+func resizeVertical(src *image.NRGBA, height int, filter ResampleFilter) *image.NRGBA {
+	srcBounds := src.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+	srcMinX := srcBounds.Min.X
+	srcMinY := srcBounds.Min.Y
+	srcMaxY := srcBounds.Max.Y
+
+	dstW := srcW
+	dstH := height
+
+	dst := image.NewNRGBA(image.Rect(0, 0, dstW, dstH))
+
+	dY := float64(srcH) / float64(dstH)
+	scaleY := math.Max(dY, 1.0)
+	rY := math.Ceil(scaleY * filter.Support)
+	weights := make([]float64, int(rY+2)*2)
+
+	for dstY := 0; dstY < dstH; dstY++ {
+		fY := float64(srcMinY) + (float64(dstY)+0.5)*dY - 0.5
+
+		startY := int(math.Ceil(fY - rY))
+		if startY < srcMinY {
+			startY = srcMinY
+		}
+		endY := int(math.Floor(fY + rY))
+		if endY > srcMaxY-1 {
+			endY = srcMaxY - 1
+		}
+
+		// cache weights
+		weightSum := 0.0
+		for y := startY; y <= endY; y++ {
+			w := filter.Kernel((float64(y) - fY) / scaleY)
+			weightSum += w
+			weights[y-startY] = w
+		}
+
+		for dstX := 0; dstX < dstW; dstX++ {
+			srcX := srcMinX + dstX
+
+			r, g, b, a := 0.0, 0.0, 0.0, 0.0
+			for y := startY; y <= endY; y++ {
+				weight := weights[y-startY]
+				i := src.PixOffset(srcX, y)
+				r += float64(src.Pix[i+0]) * weight
+				g += float64(src.Pix[i+1]) * weight
+				b += float64(src.Pix[i+2]) * weight
+				a += float64(src.Pix[i+3]) * weight
+			}
+
+			r = math.Min(math.Max(r/weightSum, 0.0), 255.0)
+			g = math.Min(math.Max(g/weightSum, 0.0), 255.0)
+			b = math.Min(math.Max(b/weightSum, 0.0), 255.0)
+			a = math.Min(math.Max(a/weightSum, 0.0), 255.0)
+
+			j := dst.PixOffset(dstX, dstY)
+			dst.Pix[j+0] = uint8(r + 0.5)
+			dst.Pix[j+1] = uint8(g + 0.5)
+			dst.Pix[j+2] = uint8(b + 0.5)
+			dst.Pix[j+3] = uint8(a + 0.5)
+		}
+	}
+
+	return dst
+}
+
+// fast nearest-neighbor resize, no filtering
+func resizeNearest(img image.Image, width, height int) *image.NRGBA {
 	dstW, dstH := width, height
 
 	if dstW < 0 || dstH < 0 {
@@ -607,93 +803,42 @@ func Resize(img image.Image, width, height int) *image.NRGBA {
 	src := convertToNRGBA(img)
 	dst := image.NewNRGBA(image.Rect(0, 0, dstW, dstH))
 
-	dy := float64(srcH) / float64(dstH)
 	dx := float64(srcW) / float64(dstW)
+	dy := float64(srcH) / float64(dstH)
 
-	radiusX := dx / 2.0
-	radiusY := dy / 2.0
+	for dstY := 0; dstY < dstH; dstY++ {
+		fy := float64(srcMinY) + (float64(dstY)+0.5)*dy - 0.5
 
-	// increase the radius of antialiasing a little to produce smoother output image
-	radiusX = math.Ceil(radiusX * 1.25)
-	radiusY = math.Ceil(radiusY * 1.25)
+		for dstX := 0; dstX < dstW; dstX++ {
+			fx := float64(srcMinX) + (float64(dstX)+0.5)*dx - 0.5
 
-	weightsX := make([]float64, int(radiusX+2)*2)
+			srcX := int(math.Min(math.Max(math.Floor(fx+0.5), float64(srcMinX)), float64(srcMaxX)))
+			srcY := int(math.Min(math.Max(math.Floor(fy+0.5), float64(srcMinY)), float64(srcMaxY)))
 
-	for dstX := 0; dstX < dstW; dstX++ {
-		fx := float64(srcMinX) + (float64(dstX)+0.5)*dx - 0.5
+			srcOffset := src.PixOffset(srcX, srcY)
+			dstOffset := dst.PixOffset(dstX, dstY)
 
-		startX := int(math.Ceil(fx - radiusX))
-		if startX < srcMinX {
-			startX = srcMinX
-		}
-		endX := int(math.Floor(fx + radiusX))
-		if endX > srcMaxX-1 {
-			endX = srcMaxX - 1
-		}
-
-		// cache weights for xs
-		for x := startX; x <= endX; x++ {
-			weightsX[x-startX] = antialiasFilter((float64(x) - fx) / radiusX)
-		}
-
-		for dstY := 0; dstY < dstH; dstY++ {
-			fy := float64(srcMinY) + (float64(dstY)+0.5)*dy - 0.5
-
-			startY := int(math.Ceil(fy - radiusY))
-			if startY < srcMinY {
-				startY = srcMinY
-			}
-			endY := int(math.Floor(fy + radiusY))
-			if endY > srcMaxY-1 {
-				endY = srcMaxY - 1
-			}
-
-			weightSum := 0.0
-			r, g, b, a := 0.0, 0.0, 0.0, 0.0
-
-			for y := startY; y <= endY; y++ {
-
-				weightSumTmp := 0.0
-				rTmp, gTmp, bTmp, aTmp := 0.0, 0.0, 0.0, 0.0
-
-				for x := startX; x <= endX; x++ {
-					weight := weightsX[x-startX]
-					weightSumTmp += weight
-
-					i := src.PixOffset(x, y)
-					rTmp += float64(src.Pix[i+0]) * weight
-					gTmp += float64(src.Pix[i+1]) * weight
-					bTmp += float64(src.Pix[i+2]) * weight
-					aTmp += float64(src.Pix[i+3]) * weight
-				}
-
-				weight := antialiasFilter((float64(y) - fy) / radiusY)
-				weightSum += weight
-
-				r += (rTmp / weightSumTmp) * weight
-				g += (gTmp / weightSumTmp) * weight
-				b += (bTmp / weightSumTmp) * weight
-				a += (aTmp / weightSumTmp) * weight
-			}
-
-			r = math.Min(r/weightSum, 255.0)
-			g = math.Min(g/weightSum, 255.0)
-			b = math.Min(b/weightSum, 255.0)
-			a = math.Min(a/weightSum, 255.0)
-
-			i := dst.PixOffset(dstX, dstY)
-			dst.Pix[i+0] = uint8(r + 0.5)
-			dst.Pix[i+1] = uint8(g + 0.5)
-			dst.Pix[i+2] = uint8(b + 0.5)
-			dst.Pix[i+3] = uint8(a + 0.5)
+			dst.Pix[dstOffset+0] = src.Pix[srcOffset+0]
+			dst.Pix[dstOffset+1] = src.Pix[srcOffset+1]
+			dst.Pix[dstOffset+2] = src.Pix[srcOffset+2]
+			dst.Pix[dstOffset+3] = src.Pix[srcOffset+3]
 		}
 	}
 
 	return dst
 }
 
-// Fit scales down the image to fit the specified maximum width and height and returns the transformed image.
-func Fit(img image.Image, width, height int) *image.NRGBA {
+// Fit scales down the image using the specified resample filter to fit the specified 
+// maximum width and height and returns the transformed image.
+//
+// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
+// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
+//
+// Usage example:
+//
+//		dstImage := imaging.Fit(srcImage, 800, 600, imaging.Lanczos)
+//
+func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
 	maxW, maxH := width, height
 
 	if maxW <= 0 || maxH <= 0 {
@@ -724,11 +869,20 @@ func Fit(img image.Image, width, height int) *image.NRGBA {
 		newW = int(float64(newH) * srcAspectRatio)
 	}
 
-	return Resize(img, newW, newH)
+	return Resize(img, newW, newH, filter)
 }
 
-// Thumbnail scales the image up or down, crops it to the specified size and returns the transformed image.
-func Thumbnail(img image.Image, width, height int) *image.NRGBA {
+// Thumbnail scales the image up or down using the specified resample filter, crops it 
+// to the specified width and hight and returns the transformed image.
+//
+// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
+// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
+//
+// Usage example:
+//
+//		dstImage := imaging.Fit(srcImage, 100, 100, imaging.Lanczos)
+//
+func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
 	thumbW, thumbH := width, height
 
 	if thumbW <= 0 || thumbH <= 0 {
@@ -748,9 +902,9 @@ func Thumbnail(img image.Image, width, height int) *image.NRGBA {
 
 	var tmp image.Image
 	if srcAspectRatio > thumbAspectRatio {
-		tmp = Resize(img, 0, thumbH)
+		tmp = Resize(img, 0, thumbH, filter)
 	} else {
-		tmp = Resize(img, thumbW, 0)
+		tmp = Resize(img, thumbW, 0, filter)
 	}
 
 	return CropCenter(tmp, thumbW, thumbH)
