@@ -10,6 +10,10 @@ import (
 // CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
 //
 // 	General filter recommendations:
+//
+// 	- Lanczos
+// 		Probably the best resampling filter for photographic images yielding sharp results, 
+//  	but it's slower than cubic filters (see below).
 //	
 // 	- CatmullRom
 // 		A sharp cubic filter. It's a good filter for both upscaling and downscaling if sharp results are needed.
@@ -20,9 +24,16 @@ import (
 // 	- BSpline
 // 		A good filter if a very smooth output is needed.
 //	
-// 	- Lanczos
-// 		Probably the best resampling filter yielding sharp results, but it's slower than cubic filters.
-// 
+//  - Linear
+//		Bilinear interpolation filter, produces reasonably good, smooth output. It's faster than cubic filters.
+//
+//  - Box
+//		Simple and fast resampling filter appropriate for downscaling.
+//		When upscaling it's similar to NearestNeighbor.
+//
+//  - NearestNeighbor
+//		Fastest resample filter, no antialiasing at all. Rarely used.
+//
 type ResampleFilter struct {
 	Support float64
 	Kernel  func(float64) float64
