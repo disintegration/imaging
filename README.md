@@ -7,15 +7,6 @@ manipulation functions provided by the package take any image type that
 implements `image.Image` interface, and return a new image of 
 `*image.NRGBA` type (32 bit RGBA colors, not premultiplied by alpha). 
 
-###Recent changes
-
-- Resize, Fit and Thumbnail now take 4th argument - resample filter. 
-Supported filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
-CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
-- New function: Overlay. This function can be used to draw one (partially 
-transparent) image over another, to blend two images, etc.
-
-
 ###Installation
 
     go get github.com/disintegration/imaging
