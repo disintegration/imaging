@@ -1,9 +1,9 @@
 // Package imaging provides basic image manipulation functions
 // (resize, rotate, flip, crop, etc.) as well as simplified image loading and saving.
-// 
-// This package is based on the standard Go image package. All the image 
-// manipulation functions provided by the package take any image type that 
-// implements image.Image interface, and return a new image of 
+//
+// This package is based on the standard Go image package. All the image
+// manipulation functions provided by the package take any image type that
+// implements image.Image interface, and return a new image of
 // *image.NRGBA type (32 bit RGBA colors, not premultiplied by alpha).
 //
 package imaging
@@ -33,7 +33,7 @@ func Open(filename string) (img image.Image, err error) {
 	return
 }
 
-// Save saves the image to file with the specified filename. 
+// Save saves the image to file with the specified filename.
 // The format is determined from the filename extension, "jpg" (or "jpeg") and "png" are supported.
 func Save(img image.Image, filename string) (err error) {
 	format := strings.ToLower(filepath.Ext(filename))
@@ -72,7 +72,7 @@ func Save(img image.Image, filename string) (err error) {
 	return
 }
 
-// New creates a new image with the specified width and height, and fills it with the specified color. 
+// New creates a new image with the specified width and height, and fills it with the specified color.
 func New(width, height int, fillColor color.Color) *image.NRGBA {
 	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
 	c := color.NRGBAModel.Convert(fillColor).(color.NRGBA)
@@ -421,7 +421,7 @@ func Overlay(background, source image.Image, pos image.Point, opacity float64) *
 	return dst
 }
 
-// Rotate90 rotates the image 90 degrees clockwise and returns the transformed image.
+// Rotate90 rotates the image 90 degrees counterclockwise and returns the transformed image.
 func Rotate90(img image.Image) *image.NRGBA {
 	src := convertToNRGBA(img)
 	srcBounds := src.Bounds()
@@ -451,7 +451,7 @@ func Rotate90(img image.Image) *image.NRGBA {
 	return dst
 }
 
-// Rotate180 rotates the image 180 degrees clockwise and returns the transformed image.
+// Rotate180 rotates the image 180 degrees counterclockwise and returns the transformed image.
 func Rotate180(img image.Image) *image.NRGBA {
 	src := convertToNRGBA(img)
 	srcBounds := src.Bounds()
@@ -481,7 +481,7 @@ func Rotate180(img image.Image) *image.NRGBA {
 	return dst
 }
 
-// Rotate270 rotates the image 270 degrees clockwise and returns the transformed image.
+// Rotate270 rotates the image 270 degrees counterclockwise and returns the transformed image.
 func Rotate270(img image.Image) *image.NRGBA {
 	src := convertToNRGBA(img)
 	srcBounds := src.Bounds()
@@ -604,7 +604,7 @@ func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NR
 		return &image.NRGBA{}
 	}
 
-	// if new width or height is 0 then preserve aspect ratio, minimum 1px  
+	// if new width or height is 0 then preserve aspect ratio, minimum 1px
 	if dstW == 0 {
 		tmpW := float64(dstH) * float64(srcW) / float64(srcH)
 		dstW = int(math.Max(1.0, math.Floor(tmpW+0.5)))
@@ -617,7 +617,7 @@ func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NR
 	src := convertToNRGBA(img)
 	var tmp, dst *image.NRGBA
 
-	// two-pass resize 
+	// two-pass resize
 	if srcW != dstW {
 		tmp = resizeHorizontal(src, dstW, filter)
 	} else {
@@ -790,7 +790,7 @@ func resizeNearest(img image.Image, width, height int) *image.NRGBA {
 		return &image.NRGBA{}
 	}
 
-	// if new width or height is 0 then preserve aspect ratio, minimum 1px  
+	// if new width or height is 0 then preserve aspect ratio, minimum 1px
 	if dstW == 0 {
 		tmpW := float64(dstH) * float64(srcW) / float64(srcH)
 		dstW = int(math.Max(1.0, math.Floor(tmpW+0.5)))
@@ -828,7 +828,7 @@ func resizeNearest(img image.Image, width, height int) *image.NRGBA {
 	return dst
 }
 
-// Fit scales down the image using the specified resample filter to fit the specified 
+// Fit scales down the image using the specified resample filter to fit the specified
 // maximum width and height and returns the transformed image.
 //
 // Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
@@ -872,7 +872,7 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 	return Resize(img, newW, newH, filter)
 }
 
-// Thumbnail scales the image up or down using the specified resample filter, crops it 
+// Thumbnail scales the image up or down using the specified resample filter, crops it
 // to the specified width and hight and returns the transformed image.
 //
 // Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,

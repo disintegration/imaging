@@ -27,15 +27,19 @@ import (
 )
 
 func main() {
-    src, _ := imaging.Open("src.png") // load an image from file (returns image.Image interface)
+    src, err := imaging.Open("src.png") // load an image from file (returns image.Image interface)
+    if err != nil {
+        panic(err)
+    }
+
     var dst *image.NRGBA
-    
+
     dst = imaging.New(800, 600, color.NRGBA{255, 0, 0, 255}) // create a new 800x600px image filled with red color
-    dst = imaging.Clone(src) // make a copy of the image
-    
-    dst = imaging.Rotate90(src) // rotate 90 degrees clockwise 
-    dst = imaging.Rotate180(src) // rotate 180 degrees clockwise
-    dst = imaging.Rotate270(src) // rotate 270 degrees clockwise
+    dst = imaging.Clone(src)                                 // make a copy of the image
+
+    dst = imaging.Rotate90(src)  // rotate 90 degrees counterclockwiseclockwise
+    dst = imaging.Rotate180(src) // rotate 180 degrees counterclockwiseclockwise
+    dst = imaging.Rotate270(src) // rotate 270 degrees counterclockwiseclockwise
 
     dst = imaging.FlipH(src) // flip horizontally (from left to right)
     dst = imaging.FlipV(src) // flip vertically (from top to bottom)
@@ -45,20 +49,23 @@ func main() {
     // CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
 
     dst = imaging.Resize(src, 600, 400, imaging.CatmullRom) // resize to 600x400 px using CatmullRom cubic filter
-    dst = imaging.Resize(src, 600, 0, imaging.CatmullRom) // resize to width = 600, preserve the image aspect ratio
-    dst = imaging.Resize(src, 0, 400, imaging.CatmullRom) // resize to height = 400, preserve the image aspect ratio
-    
-    dst = imaging.Fit(src, 800, 600, imaging.CatmullRom) // scale down the image to fit the given maximum width and height
+    dst = imaging.Resize(src, 600, 0, imaging.CatmullRom)   // resize to width = 600, preserve the image aspect ratio
+    dst = imaging.Resize(src, 0, 400, imaging.CatmullRom)   // resize to height = 400, preserve the image aspect ratio
+
+    dst = imaging.Fit(src, 800, 600, imaging.CatmullRom)       // scale down the image to fit the given maximum width and height
     dst = imaging.Thumbnail(src, 100, 100, imaging.CatmullRom) // resize and crop the image to make a 100x100 thumbnail
-    
+
     dst = imaging.Crop(src, image.Rect(50, 50, 100, 100)) // cut out a rectangular region from the image
-    dst = imaging.CropCenter(src, 200, 100) // cut out a 200x100 px region from the center of the image
-    dst = imaging.Paste(dst, src, image.Pt(50, 50)) // paste the src image to the dst image at the given position
-    dst = imaging.PasteCenter(dst, src) // paste the src image to the center of the dst image
-    
+    dst = imaging.CropCenter(src, 200, 100)               // cut out a 200x100 px region from the center of the image
+    dst = imaging.Paste(dst, src, image.Pt(50, 50))       // paste the src image to the dst image at the given position
+    dst = imaging.PasteCenter(dst, src)                   // paste the src image to the center of the dst image
+
     // draw one image over another at the given position and with the given opacity (from 0.0 to 1.0)
     dst = imaging.Overlay(dst, src, image.Pt(50, 30), 1.0)
-    
-    imaging.Save(dst, "dst.jpg") // save the image to file
+
+    err = imaging.Save(dst, "dst.jpg") // save the image to file
+    if err != nil {
+        panic(err)
+    }
 }
 ```
