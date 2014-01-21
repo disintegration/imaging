@@ -30,7 +30,7 @@ func Blur(img image.Image, sigma float64) *image.NRGBA {
 	}
 
 	src := toNRGBA(img)
-	radius := int(math.Ceil(sigma * 2.0))
+	radius := int(math.Ceil(sigma * 3.0))
 	kernel := make([]float64, radius+1)
 
 	for i := 0; i <= radius; i++ {
