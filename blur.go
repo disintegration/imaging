@@ -1,7 +1,6 @@
 package imaging
 
 import (
-	"errors"
 	"image"
 	"math"
 )
@@ -26,7 +25,8 @@ func absint(i int) int {
 //
 func Blur(img image.Image, sigma float64) *image.NRGBA {
 	if sigma <= 0 {
-		errors.New("sigma parameter must be positive")
+		// sigma parameter must be positive!
+		return Clone(img)
 	}
 
 	src := toNRGBA(img)
