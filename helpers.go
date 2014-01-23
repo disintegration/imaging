@@ -34,7 +34,7 @@ func Open(filename string) (img image.Image, err error) {
 func Save(img image.Image, filename string) (err error) {
 	format := strings.ToLower(filepath.Ext(filename))
 	if format != ".jpg" && format != ".jpeg" && format != ".png" {
-		err = fmt.Errorf("unknown image format: %s", format)
+		err = fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
 		return
 	}
 
