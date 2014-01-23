@@ -3,7 +3,7 @@
 Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
 This package is based on the standard Go image package and works best along with it. 
 
-###Installation
+### Installation
 
     go get -u github.com/disintegration/imaging
     
@@ -11,7 +11,7 @@ This package is based on the standard Go image package and works best along with
 
 http://godoc.org/github.com/disintegration/imaging
 
-###Overview
+### Overview
 
 Image manipulation functions provided by the package take any image type 
 that implements `image.Image` interface as an input, and return a new image of 
@@ -106,7 +106,7 @@ dstImage = imaging.PasteCenter(backgroundImage, srcImage)
 // draw the srcImage over the backgroundImage at the (50, 50) position with opacity=0.5
 dstImage = imaging.Overlay(backgroundImage, srcImage, image.Pt(50, 50), 0.5)
 ```
-##### Blur and Sharpen
+##### Blur & Sharpen
 
 `Blur` produces a blurred version of the image.
 
@@ -120,6 +120,18 @@ Examples:
 ```go
 dstImage = imaging.Blur(srcImage, 4.5)
 dstImage = imaging.Sharpen(srcImage, 3.0)
+```
+
+##### Color modifications
+
+`Grayscale` produces grayscale version of the image.
+
+`Invert` produces inverted (negated) version of the image.
+
+Examples:
+```go
+dstImage = imaging.Grayscale(srcImage)
+dstImage = imaging.Invert(srcImage)
 ```
 
 ##### Load, Save, New, Clone
