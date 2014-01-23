@@ -152,6 +152,28 @@ func Clone(img image.Image) *image.NRGBA {
 			}
 		}
 
+	case *image.Paletted:
+		plen := len(src0.Palette)
+		pnew := make([]color.NRGBA, plen)
+		for i := 0; i < plen; i++ {
+			pnew[i] = color.NRGBAModel.Convert(src0.Palette[i]).(color.NRGBA)
+		}
+
+		i0 := dst.PixOffset(dstMinX, dstMinY)
+		for y := srcMinY; y < srcMaxY; y, i0 = y+1, i0+dst.Stride {
+			for x, i := srcMinX, i0; x < srcMaxX; x, i = x+1, i+4 {
+
+				j := src0.PixOffset(x, y)
+				c := pnew[src0.Pix[j]]
+
+				dst.Pix[i+0] = c.R
+				dst.Pix[i+1] = c.G
+				dst.Pix[i+2] = c.B
+				dst.Pix[i+3] = c.A
+
+			}
+		}
+
 	default:
 		i0 := dst.PixOffset(dstMinX, dstMinY)
 		for y := srcMinY; y < srcMaxY; y, i0 = y+1, i0+dst.Stride {
