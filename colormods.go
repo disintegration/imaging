@@ -2,55 +2,50 @@ package imaging
 
 import (
 	"image"
+	"math"
 )
 
-// Grayscale produces grayscale version of the image.
-func Grayscale(img image.Image) *image.NRGBA {
+// ColorMapping produces color adjusted version of the image with given map function
+func ColorMapping(img image.Image, mapping func (r, g, b, a uint8) (uint8, uint8, uint8, uint8)) *image.NRGBA {
 	src := toNRGBA(img)
 	width := src.Bounds().Max.X
 	height := src.Bounds().Max.Y
 	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
 
-	parallel(height, func(partStart, partEnd int) {
-		for y := partStart; y < partEnd; y++ {
-			for x := 0; x < width; x++ {
-				i := y*src.Stride + x*4
-				j := y*dst.Stride + x*4
-				r := float64(src.Pix[i+0])
-				g := float64(src.Pix[i+1])
-				b := float64(src.Pix[i+2])
-				f := 0.299*r + 0.587*g + 0.114*b
-				c := uint8(f + 0.5)
-				dst.Pix[j+0] = c
-				dst.Pix[j+1] = c
-				dst.Pix[j+2] = c
-				dst.Pix[j+3] = src.Pix[i+3]
-			}
+	parallel(width * height, func(partStart, partEnd int) {
+		for k := partStart; k < partEnd; k++ {
+			i := k*4
+			r, g, b, a := src.Pix[i+0], src.Pix[i+1], src.Pix[i+2], src.Pix[i+3]
+			dst.Pix[i+0], dst.Pix[i+1], dst.Pix[i+2], dst.Pix[i+3] = mapping(r, g, b, a)
 		}
 	})
 
 	return dst
 }
 
+// Grayscale produces gamma corrected version of the image.
+func Gamma(img image.Image, gamma float64) *image.NRGBA {
+	inv := 1 / gamma
+	correct := func (r uint8) uint8 {
+		return uint8(255 * (math.Pow(float64(r) / 255.0, inv)))
+	}
+	return ColorMapping(img, func (r, g, b, a uint8) (uint8, uint8, uint8, uint8) {
+		return correct(r), correct(g), correct(b), a
+	})
+}
+
+// Grayscale produces grayscale version of the image.
+func Grayscale(img image.Image) *image.NRGBA {
+	return ColorMapping(img, func (r, g, b, a uint8) (uint8, uint8, uint8, uint8) {
+		f := 0.299*float64(r) + 0.587*float64(g) + 0.114*float64(b)
+		c := uint8(f + 0.5)
+		return c, c, c, a
+	})
+}
+
 // Invert produces inverted (negated) version of the image.
 func Invert(img image.Image) *image.NRGBA {
-	src := toNRGBA(img)
-	width := src.Bounds().Max.X
-	height := src.Bounds().Max.Y
-	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
-
-	parallel(height, func(partStart, partEnd int) {
-		for y := partStart; y < partEnd; y++ {
-			for x := 0; x < width; x++ {
-				i := y*src.Stride + x*4
-				j := y*dst.Stride + x*4
-				dst.Pix[j+0] = 255 - src.Pix[i+0]
-				dst.Pix[j+1] = 255 - src.Pix[i+1]
-				dst.Pix[j+2] = 255 - src.Pix[i+2]
-				dst.Pix[j+3] = src.Pix[i+3]
-			}
-		}
+	return ColorMapping(img, func (r, g, b, a uint8) (uint8, uint8, uint8, uint8) {
+		return 255-r, 255-g, 255-b, a
 	})
-
-	return dst
 }
