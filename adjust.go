@@ -93,6 +93,7 @@ func AdjustContrast(img image.Image, percentage float64) *image.NRGBA {
 // The percentage = 0 gives the original image.
 // The percentage <= -100 gives solid black image.
 // The percentage >= 100 gives solid white image.
+//
 // Examples:
 //
 //	dstImage = imaging.AdjustBrightness(srcImage, -15) // decrease image brightness by 15%
