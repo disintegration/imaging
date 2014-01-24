@@ -3,15 +3,15 @@
 Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
 This package is based on the standard Go image package and works best along with it. 
 
-### Installation
+## Installation
 
     go get -u github.com/disintegration/imaging
     
-### Documentation
+## Documentation
 
 http://godoc.org/github.com/disintegration/imaging
 
-### Overview
+## Overview
 
 Image manipulation functions provided by the package take any image type 
 that implements `image.Image` interface as an input, and return a new image of 
@@ -19,7 +19,7 @@ that implements `image.Image` interface as an input, and return a new image of
 
 Note: some of examples below require importing standard `image` or `image/color` packages.
 
-##### Parallelization
+### Parallelization
 
 Imaging package uses parallel goroutines for faster image processing.
 To achieve maximum performance, make sure to allow Go to utilize all CPU cores. Use standard `runtime` package:
@@ -27,19 +27,19 @@ To achieve maximum performance, make sure to allow Go to utilize all CPU cores. 
 runtime.GOMAXPROCS(runtime.NumCPU())
 ```
 
-##### Resize
+### Resize
 
 There are three image resizing functions in the package: `Resize`, `Fit` and `Thumbnail`.
 
-`Resize` resizes the image to the specified width and height using the specified resample
+**Resize** resizes the image to the specified width and height using the specified resample
 filter and returns the transformed image. If one of width or height is 0, the image aspect
 ratio is preserved.
 
-`Fit` scales down the image using the specified resample filter to fit the specified
+**Fit** scales down the image using the specified resample filter to fit the specified
 maximum width and height and returns the transformed image. The image aspect
 ratio is preserved.
 
-`Thumbnail` scales the image up or down using the specified resample filter, crops it
+**Thumbnail** scales the image up or down using the specified resample filter, crops it
 to the specified width and hight and returns the transformed image.
 
 All three resizing function take `ResampleFilter` as the last argument.
@@ -48,7 +48,6 @@ CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch
 CatmullRom (cubic filter) and Lanczos are recommended for high quality general purpose image resizing. 
 NearestNeighbor is the fastest one but applies no anti-aliasing.
 
-Examples:
 ```go
 // resize srcImage to width = 800px preserving the aspect ratio
 dstImage := imaging.Resize(srcImage, 800, 0, imaging.Lanczos)
@@ -60,12 +59,11 @@ dstImage = imaging.Fit(srcImage, 800, 600, imaging.Lanczos)
 dstImage = imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
 ```
 
-##### Rotate & flip
+### Rotate & flip
     
 Imaging package implements functions to rotate an image 90, 180 or 270 degrees (counter-clockwise)
 and to flip an image horizontally or vertically.
 
-Examples:
 ```go
 dstImage = imaging.Rotate90(srcImage)  // rotate 90 degrees counter-clockwise
 dstImage = imaging.Rotate180(srcImage) // rotate 180 degrees counter-clockwise
@@ -74,22 +72,21 @@ dstImage = imaging.FlipH(srcImage)     // flip horizontally (from left to right)
 dstImage = imaging.FlipV(srcImage)     // flip vertically (from top to bottom)
 ```
 
-##### Crop, Paste, Overlay
+### Crop, Paste, Overlay
 
-`Crop` cuts out a rectangular region with the specified bounds from the image and returns 
+**Crop** cuts out a rectangular region with the specified bounds from the image and returns 
 the cropped image. 
 
-`CropCenter` cuts out a rectangular region with the specified size from the center of the image
+**CropCenter** cuts out a rectangular region with the specified size from the center of the image
 and returns the cropped image.
 
-`Paste` pastes one image into another at the specified position and returns the combined image.
+**Paste** pastes one image into another at the specified position and returns the combined image.
 
-`PasteCenter` pastes one image to the center of another image and returns the combined image.
+**PasteCenter** pastes one image to the center of another image and returns the combined image.
 
-`Overlay` draws one image over another image at the specified position with the specified opacity 
+**Overlay** draws one image over another image at the specified position with the specified opacity 
 and returns the combined image. Opacity parameter must be from 0.0 (fully transparent) to 1.0 (opaque).
 
-Examples:
 ```go
 // cut out a rectangular region from the image
 dstImage = imaging.Crop(srcImage, image.Rect(50, 50, 100, 100)) 
@@ -106,39 +103,66 @@ dstImage = imaging.PasteCenter(backgroundImage, srcImage)
 // draw the srcImage over the backgroundImage at the (50, 50) position with opacity=0.5
 dstImage = imaging.Overlay(backgroundImage, srcImage, image.Pt(50, 50), 0.5)
 ```
-##### Blur & Sharpen
+### Blur & Sharpen
 
-`Blur` produces a blurred version of the image.
+**Blur** produces a blurred version of the image.
 
-`Sharpen` produces a sharpened version of the image.
+**Sharpen** produces a sharpened version of the image.
 
 Both functions take the `sigma` argument that is used in a Gaussian function. 
 Sigma must be a positive floating point value indicating how much the image 
 will be blurred or sharpened and how many neighbours of each pixel will be affected.
 
-Examples:
 ```go
 dstImage = imaging.Blur(srcImage, 4.5)
 dstImage = imaging.Sharpen(srcImage, 3.0)
 ```
 
-##### Color modifications
+### Adjustments
 
-`Grayscale` produces grayscale version of the image.
+**AdjustGamma** performs a gamma correction on the image and returns the adjusted image. 
+Gamma parameter must be positive. Gamma = 1.0 gives the original image.
+Gamma less than 1.0 darkens the image and gamma greater than 1.0 lightens it.
 
-`Invert` produces inverted (negated) version of the image.
 
-Examples:
+```go
+dstImage = imaging.AdjustGamma(srcImage, 0.7)
+```
+
+**AdjustBrightness** changes the brightness of the image using the percentage parameter and returns the adjusted image. 
+The percentage = 0 gives the original image. The percentage <= -100 gives solid black image. The percentage >= 100 gives solid white image. 
+
+
+```go
+dstImage = imaging.AdjustBrightness(srcImage, -15) // decrease image brightness by 15%
+dstImage = imaging.AdjustBrightness(srcImage, +10) // increase image brightness by 10%
+```
+
+**AdjustContrast** changes the contrast of the image using the percentage parameter and returns the adjusted image. 
+The percentage = 0 gives the original image. The percentage <= -100 gives solid grey image.
+
+
+```go
+dstImage = imaging.AdjustContrast(srcImage, -10) // decrease image contrast by 10%
+dstImage = imaging.AdjustContrast(srcImage, +50) // increase image contrast by 50%
+```
+
+**Grayscale** produces grayscale version of the image.
+
 ```go
 dstImage = imaging.Grayscale(srcImage)
+```
+
+**Invert** produces inverted (negated) version of the image.
+
+```go
 dstImage = imaging.Invert(srcImage)
 ```
 
-##### Load, Save, New, Clone
+#### Load, Save, New, Clone
 
 Imaging package provides useful shortcuts for image loading, saving, creation and copying.
 
-Examples:
 ```go
 // load an image from file
 img, err := imaging.Open("src.png") 
@@ -211,7 +235,7 @@ func main() {
 ```
 
 
-### Code example
+## Code example
 Here is the complete example that loades several images, makes thumbnails of them
 and joins them together.
 
