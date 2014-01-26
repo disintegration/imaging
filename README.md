@@ -159,7 +159,7 @@ dstImage = imaging.Grayscale(srcImage)
 dstImage = imaging.Invert(srcImage)
 ```
 
-#### Load, Save, New, Clone
+#### Open, Save, New, Clone
 
 Imaging package provides useful shortcuts for image loading, saving, creation and copying.
 
