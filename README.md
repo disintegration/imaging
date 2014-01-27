@@ -129,22 +129,22 @@ Gamma less than 1.0 darkens the image and gamma greater than 1.0 lightens it.
 dstImage = imaging.AdjustGamma(srcImage, 0.7)
 ```
 
-**AdjustBrightness** changes the brightness of the image using the percentage parameter and returns the adjusted image. 
-The percentage = 0 gives the original image. The percentage <= -100 gives solid black image. The percentage >= 100 gives solid white image. 
+**AdjustBrightness** changes the brightness of the image using the percentage parameter and returns the adjusted image. The percentage must be in range (-100, 100).
+The percentage = 0 gives the original image. The percentage = -100 gives solid black image. The percentage = 100 gives solid white image. 
 
 
 ```go
 dstImage = imaging.AdjustBrightness(srcImage, -15) // decrease image brightness by 15%
-dstImage = imaging.AdjustBrightness(srcImage, +10) // increase image brightness by 10%
+dstImage = imaging.AdjustBrightness(srcImage, 10) // increase image brightness by 10%
 ```
 
-**AdjustContrast** changes the contrast of the image using the percentage parameter and returns the adjusted image. 
-The percentage = 0 gives the original image. The percentage <= -100 gives solid grey image.
+**AdjustContrast** changes the contrast of the image using the percentage parameter and returns the adjusted image. The percentage must be in range (-100, 100).
+The percentage = 0 gives the original image. The percentage = -100 gives solid grey image.
 
 
 ```go
 dstImage = imaging.AdjustContrast(srcImage, -10) // decrease image contrast by 10%
-dstImage = imaging.AdjustContrast(srcImage, +50) // increase image contrast by 50%
+dstImage = imaging.AdjustContrast(srcImage, 20) // increase image contrast by 20%
 ```
 
 **Grayscale** produces grayscale version of the image.

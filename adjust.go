@@ -65,21 +65,27 @@ func AdjustGamma(img image.Image, gamma float64) *image.NRGBA {
 }
 
 // AdjustContrast changes the contrast of the image using the percentage parameter and returns the adjusted image.
-// The percentage = 0 gives the original image.
-// The percentage <= -100 gives solid grey image.
+// The percentage must be in range (-100, 100). The percentage = 0 gives the original image.
+// The percentage = -100 gives solid grey image.
 //
 // Examples:
 //
 //	dstImage = imaging.AdjustContrast(srcImage, -10) // decrease image contrast by 10%
-//	dstImage = imaging.AdjustContrast(srcImage, +50) // increase image contrast by 50%
+//	dstImage = imaging.AdjustContrast(srcImage, 20) // increase image contrast by 20%
 //
 func AdjustContrast(img image.Image, percentage float64) *image.NRGBA {
-	percentage = math.Max(percentage, -100.0)
+	percentage = math.Min(math.Max(percentage, -100.0), 100.0)
 	lut := make([]uint8, 256)
 
 	v := (100.0 + percentage) / 100.0
 	for i := 0; i < 256; i++ {
-		lut[i] = clamp(128.0 + (float64(i)-128.0)*v)
+		if 0 <= v && v <= 1 {
+			lut[i] = clamp((0.5 + (float64(i)/255.0-0.5)*v) * 255.0)
+		} else if 1 < v && v < 2 {
+			lut[i] = clamp((0.5 + (float64(i)/255.0-0.5)*(1/(2.0-v))) * 255.0)
+		} else {
+			lut[i] = uint8(float64(i)/255.0+0.5) * 255
+		}
 	}
 
 	fn := func(c color.NRGBA) color.NRGBA {
@@ -90,14 +96,13 @@ func AdjustContrast(img image.Image, percentage float64) *image.NRGBA {
 }
 
 // AdjustBrightness changes the brightness of the image using the percentage parameter and returns the adjusted image.
-// The percentage = 0 gives the original image.
-// The percentage <= -100 gives solid black image.
-// The percentage >= 100 gives solid white image.
+// The percentage must be in range (-100, 100). The percentage = 0 gives the original image.
+// The percentage = -100 gives solid black image. The percentage = 100 gives solid white image.
 //
 // Examples:
 //
 //	dstImage = imaging.AdjustBrightness(srcImage, -15) // decrease image brightness by 15%
-//	dstImage = imaging.AdjustBrightness(srcImage, +10) // increase image brightness by 10%
+//	dstImage = imaging.AdjustBrightness(srcImage, 10) // increase image brightness by 10%
 //
 func AdjustBrightness(img image.Image, percentage float64) *image.NRGBA {
 	percentage = math.Min(math.Max(percentage, -100.0), 100.0)
