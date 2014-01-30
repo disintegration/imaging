@@ -70,8 +70,11 @@ func Save(img image.Image, filename string) (err error) {
 
 // New creates a new image with the specified width and height, and fills it with the specified color.
 func New(width, height int, fillColor color.Color) *image.NRGBA {
-	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
+	if width <= 0 || height <= 0 {
+		return &image.NRGBA{}
+	}
 
+	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
 	c := color.NRGBAModel.Convert(fillColor).(color.NRGBA)
 
 	if c.R == 0 && c.G == 0 && c.B == 0 && c.A == 0 {
