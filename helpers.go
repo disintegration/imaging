@@ -73,6 +73,11 @@ func New(width, height int, fillColor color.Color) *image.NRGBA {
 	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
 
 	c := color.NRGBAModel.Convert(fillColor).(color.NRGBA)
+
+	if c.R == 0 && c.G == 0 && c.B == 0 && c.A == 0 {
+		return dst
+	}
+
 	cs := []uint8{c.R, c.G, c.B, c.A}
 
 	// fill the first row
