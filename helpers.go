@@ -7,6 +7,7 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	"image/png"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
