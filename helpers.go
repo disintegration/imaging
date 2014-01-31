@@ -105,3 +105,8 @@ func toNRGBA(img image.Image) *image.NRGBA {
 	}
 	return Clone(img)
 }
+
+// clamp & round float64 to uint8 (0..255)
+func clamp(v float64) uint8 {
+	return uint8(math.Min(math.Max(v, 0.0), 255.0) + 0.5)
+}
