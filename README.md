@@ -132,20 +132,20 @@ dstImage = imaging.AdjustGamma(srcImage, 0.7)
 The percentage = 0 gives the original image. The percentage = -100 gives solid black image. The percentage = 100 gives solid white image. 
 
 ```go
-dstImage = imaging.AdjustBrightness(srcImage, -15) // decrease image brightness by 15%
-dstImage = imaging.AdjustBrightness(srcImage, 10) // increase image brightness by 10%
+dstImage = imaging.AdjustBrightness(srcImage, 10) // increase the brightness by 10%
+dstImage = imaging.AdjustBrightness(srcImage, -15) // decrease the brightness by 15%
 ```
 
 **AdjustContrast** changes the contrast of the image using the percentage parameter and returns the adjusted image. The percentage must be in range (-100, 100).
 The percentage = 0 gives the original image. The percentage = -100 gives solid grey image.
 
 ```go
-dstImage = imaging.AdjustContrast(srcImage, -10) // decrease image contrast by 10%
-dstImage = imaging.AdjustContrast(srcImage, 20) // increase image contrast by 20%
+dstImage = imaging.AdjustContrast(srcImage, 20) // increase the contrast by 20%
+dstImage = imaging.AdjustContrast(srcImage, -10) // decrease the contrast by 10%
 ```
 
 **AdjustSigmoid** changes the contrast of the image using a sigmoidal function and returns the adjusted image.
-It's a non-linear contrast change useful for photo adjustments as it preserves highlights and shadows details.
+It's a non-linear contrast change useful for photo adjustments as it preserves highlight and shadow detail.
 The midpoint parameter is the midpoint of contrast that must be between 0 and 1, typically 0.5.
 The factor parameter indicates how much to increase or decrease the contrast, typically in range (-10, 10).
 If the factor parameter is positive the image contrast is increased otherwise the contrast is decreased.
