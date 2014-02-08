@@ -6,6 +6,8 @@ This package is based on the standard Go image package and works best along with
 ## Installation
 
     go get -u github.com/disintegration/imaging
+
+*[Git](http://git-scm.com/) and [Mercurial](http://mercurial.selenic.com/) are needed.*
     
 ## Documentation
 
@@ -170,6 +172,8 @@ dstImage = imaging.Invert(srcImage)
 #### Open, Save, New, Clone
 
 Imaging package provides useful shortcuts for image loading, saving, creation and copying.
+Open and Save functions support JPEG, PNG, TIFF and BMP images. 
+External libraries can be used to load other image formats.
 
 ```go
 // load an image from file
@@ -189,57 +193,6 @@ newImg := imaging.New(800, 600, color.NRGBA{255, 0, 0, 255})
 
 // make a copy of the image
 copiedImg := imaging.Clone(img)
-```
-
-Open and Save functions support JPEG and PNG images. 
-External libraries can be used to work with other image formats.
-The example of TIFF image resizing:
-
-```go
-package main
-
-import (
-    "image"
-    "os"
-    "runtime"
-
-    // package to load and save tiff images
-    "code.google.com/p/go.image/tiff"
-    
-    "github.com/disintegration/imaging"
-)
-
-func main() {
-    // use all CPU cores for maximum performance
-    runtime.GOMAXPROCS(runtime.NumCPU())
-
-    // Load TIFF image
-    file, err := os.Open("src.tif")
-    if err != nil {
-        panic(err)
-    }
-    defer file.Close()
-
-    srcImage, _, err := image.Decode(file)
-    if err != nil {
-        panic(err)
-    }
-
-    // Resize the image
-    resizedImg := imaging.Resize(srcImage, 800, 0, imaging.Lanczos)
-
-    // Save to file
-    outfile, err := os.Create("dst.tif")
-    if err != nil {
-        panic(err)
-    }
-    defer outfile.Close()
-
-    err = tiff.Encode(outfile, resizedImg, nil)
-    if err != nil {
-        panic(err)
-    }
-}
 ```
 
 
