@@ -56,11 +56,11 @@ func Save(img image.Image, filename string) (err error) {
 	}
 	defer file.Close()
 
-	return SaveToWrite(img, format, file)
+	return SaveToWriter(img, format, file)
 }
 
 // Save image to io.Writer
-func SaveToWrite(img image.Image, format string, writer io.Writer) (err error) {
+func SaveToWriter(img image.Image, format string, writer io.Writer) (err error) {
 	switch format {
 	case ".jpg", ".jpeg":
 		var rgba *image.RGBA
