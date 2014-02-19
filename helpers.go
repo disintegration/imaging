@@ -26,13 +26,7 @@ func Open(filename string) (img image.Image, err error) {
 	}
 	defer file.Close()
 
-	img, _, err = image.Decode(file)
-	if err != nil {
-		return
-	}
-
-	img = toNRGBA(img)
-	return
+	return OpenWithReader(file)
 }
 
 // Loads an image from io.Reader
@@ -62,6 +56,11 @@ func Save(img image.Image, filename string) (err error) {
 	}
 	defer file.Close()
 
+	return SaveToWrite(img, format, file)
+}
+
+// Save image to io.Writer
+func SaveToWrite(img image.Image, format string, writer io.Writer) (err error) {
 	switch format {
 	case ".jpg", ".jpeg":
 		var rgba *image.RGBA
@@ -75,17 +74,17 @@ func Save(img image.Image, filename string) (err error) {
 			}
 		}
 		if rgba != nil {
-			err = jpeg.Encode(file, rgba, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(writer, rgba, &jpeg.Options{Quality: 95})
 		} else {
-			err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(writer, img, &jpeg.Options{Quality: 95})
 		}
 
 	case ".png":
-		err = png.Encode(file, img)
+		err = png.Encode(writer, img)
 	case ".tif", ".tiff":
-		err = tiff.Encode(file, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
+		err = tiff.Encode(writer, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
 	case ".bmp":
-		err = bmp.Encode(file, img)
+		err = bmp.Encode(writer, img)
 	default:
 		err = fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
 	}
