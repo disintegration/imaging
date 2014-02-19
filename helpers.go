@@ -7,6 +7,7 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -26,6 +27,17 @@ func Open(filename string) (img image.Image, err error) {
 	defer file.Close()
 
 	img, _, err = image.Decode(file)
+	if err != nil {
+		return
+	}
+
+	img = toNRGBA(img)
+	return
+}
+
+// Loads an image from io.Reader
+func OpenWithReader(reader io.Reader) (img image.Image, err error) {
+	img, _, err = image.Decode(reader)
 	if err != nil {
 		return
 	}
