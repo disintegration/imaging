@@ -1,22 +1,22 @@
 # Imaging
 
-Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
-This package is based on the standard Go image package and works best along with it. 
+Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.).
+This package is based on the standard Go image package and works best along with it.
 
 ## Installation
 
     go get -u github.com/disintegration/imaging
 
 *[Git](http://git-scm.com/) and [Mercurial](http://mercurial.selenic.com/) are needed.*
-    
+
 ## Documentation
 
 http://godoc.org/github.com/disintegration/imaging
 
 ## Overview
 
-Image manipulation functions provided by the package take any image type 
-that implements `image.Image` interface as an input, and return a new image of 
+Image manipulation functions provided by the package take any image type
+that implements `image.Image` interface as an input, and return a new image of
 `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
 
 Note: some of examples below require importing standard `image` or `image/color` packages.
@@ -25,7 +25,7 @@ Note: some of examples below require importing standard `image` or `image/color`
 
 Imaging package uses parallel goroutines for faster image processing.
 To achieve maximum performance, make sure to allow Go to utilize all CPU cores. Use standard `runtime` package:
-```go 
+```go
 runtime.GOMAXPROCS(runtime.NumCPU())
 ```
 
@@ -47,7 +47,7 @@ to the specified width and hight and returns the transformed image.
 All three resizing function take `ResampleFilter` as the last argument.
 A complete list of supported filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
 CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
-CatmullRom (cubic filter) and Lanczos are recommended for high quality general purpose image resizing. 
+CatmullRom (cubic filter) and Lanczos are recommended for high quality general purpose image resizing.
 NearestNeighbor is the fastest one but applies no anti-aliasing.
 
 ```go
@@ -62,7 +62,7 @@ dstImage = imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
 ```
 
 ### Rotate & flip
-    
+
 Imaging package implements functions to rotate an image 90, 180 or 270 degrees (counter-clockwise)
 and to flip an image horizontally or vertically.
 
@@ -76,8 +76,8 @@ dstImage = imaging.FlipV(srcImage)     // flip vertically (from top to bottom)
 
 ### Crop, Paste, Overlay
 
-**Crop** cuts out a rectangular region with the specified bounds from the image and returns 
-the cropped image. 
+**Crop** cuts out a rectangular region with the specified bounds from the image and returns
+the cropped image.
 
 **CropCenter** cuts out a rectangular region with the specified size from the center of the image
 and returns the cropped image.
@@ -86,21 +86,21 @@ and returns the cropped image.
 
 **PasteCenter** pastes one image to the center of another image and returns the combined image.
 
-**Overlay** draws one image over another image at the specified position with the specified opacity 
+**Overlay** draws one image over another image at the specified position with the specified opacity
 and returns the combined image. Opacity parameter must be from 0.0 (fully transparent) to 1.0 (opaque).
 
 ```go
 // cut out a rectangular region from the image
-dstImage = imaging.Crop(srcImage, image.Rect(50, 50, 100, 100)) 
+dstImage = imaging.Crop(srcImage, image.Rect(50, 50, 100, 100))
 
 // cut out a 100x100 px region from the center of the image
-dstImage = imaging.CropCenter(srcImage, 100, 100)   
+dstImage = imaging.CropCenter(srcImage, 100, 100)
 
 // paste the srcImage to the backgroundImage at the (50, 50) position
-dstImage = imaging.Paste(backgroundImage, srcImage, image.Pt(50, 50))     
+dstImage = imaging.Paste(backgroundImage, srcImage, image.Pt(50, 50))
 
 // paste the srcImage to the center of the backgroundImage
-dstImage = imaging.PasteCenter(backgroundImage, srcImage)                   
+dstImage = imaging.PasteCenter(backgroundImage, srcImage)
 
 // draw the srcImage over the backgroundImage at the (50, 50) position with opacity=0.5
 dstImage = imaging.Overlay(backgroundImage, srcImage, image.Pt(50, 50), 0.5)
@@ -111,8 +111,8 @@ dstImage = imaging.Overlay(backgroundImage, srcImage, image.Pt(50, 50), 0.5)
 
 **Sharpen** produces a sharpened version of the image.
 
-Both functions take the `sigma` argument that is used in a Gaussian function. 
-Sigma must be a positive floating point value indicating how much the image 
+Both functions take the `sigma` argument that is used in a Gaussian function.
+Sigma must be a positive floating point value indicating how much the image
 will be blurred or sharpened and how many neighbours of each pixel will be affected.
 
 ```go
@@ -122,7 +122,7 @@ dstImage = imaging.Sharpen(srcImage, 3.0)
 
 ### Adjustments
 
-**AdjustGamma** performs a gamma correction on the image and returns the adjusted image. 
+**AdjustGamma** performs a gamma correction on the image and returns the adjusted image.
 Gamma parameter must be positive. Gamma = 1.0 gives the original image.
 Gamma less than 1.0 darkens the image and gamma greater than 1.0 lightens it.
 
@@ -131,7 +131,7 @@ dstImage = imaging.AdjustGamma(srcImage, 0.7)
 ```
 
 **AdjustBrightness** changes the brightness of the image using the percentage parameter and returns the adjusted image. The percentage must be in range (-100, 100).
-The percentage = 0 gives the original image. The percentage = -100 gives solid black image. The percentage = 100 gives solid white image. 
+The percentage = 0 gives the original image. The percentage = -100 gives solid black image. The percentage = 100 gives solid white image.
 
 ```go
 dstImage = imaging.AdjustBrightness(srcImage, 10) // increase the brightness by 10%
@@ -172,18 +172,18 @@ dstImage = imaging.Invert(srcImage)
 #### Open, Save, New, Clone
 
 Imaging package provides useful shortcuts for image loading, saving, creation and copying.
-Open and Save functions support JPEG, PNG, TIFF and BMP images. 
+Open and Save functions support JPEG, PNG, TIFF, BMP and GIF images.
 External libraries can be used to load other image formats.
 
 ```go
 // load an image from file
-img, err := imaging.Open("src.png") 
+img, err := imaging.Open("src.png")
 if err != nil {
     panic(err)
 }
 
 // save the image to file
-err = imaging.Save(img, "dst.jpg") 
+err = imaging.Save(img, "dst.jpg")
 if err != nil {
     panic(err)
 }
@@ -207,7 +207,7 @@ import (
     "image"
     "image/color"
     "runtime"
-    
+
     "github.com/disintegration/imaging"
 )
 
