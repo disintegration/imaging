@@ -75,7 +75,7 @@ func Save(img image.Image, filename string) (err error) {
 	case ".bmp":
 		err = bmp.Encode(file, img)
 	case ".gif":
-		err = gif.Encode(file, img, nil)
+		err = gif.Encode(file, img, &gif.Options{NumColors: 256}))
 	default:
 		err = fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
 	}
