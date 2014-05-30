@@ -10,7 +10,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"code.google.com/p/go.image/bmp"
@@ -38,10 +37,15 @@ func Open(filename string) (img image.Image, err error) {
 // The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "tif" (or "tiff") and "bmp" are supported.
 func Save(img image.Image, filename string) (err error) {
 	format := strings.ToLower(filepath.Ext(filename))
-	m, err := regexp.MatchString(`^\.(jpg|jpeg|png|tif|tiff|bmp)$`, format)
-	if err != nil || !m {
-		err = fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
-		return
+	okay := false
+	for _, ext := range []string{".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp"} {
+		if format == ext {
+			okay = true
+			break
+		}
+	}
+	if !okay {
+		return fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
 	}
 
 	file, err := os.Create(filename)
@@ -74,8 +78,6 @@ func Save(img image.Image, filename string) (err error) {
 		err = tiff.Encode(file, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
 	case ".bmp":
 		err = bmp.Encode(file, img)
-	default:
-		err = fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
 	}
 	return
 }
