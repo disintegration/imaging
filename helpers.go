@@ -35,7 +35,7 @@ func Open(filename string) (img image.Image, err error) {
 
 // Save saves the image to file with the specified filename.
 // The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "tif" (or "tiff") and "bmp" are supported.
-func Save(img image.Image, filename string) (err error) {
+func Save(img image.Image, filename string, qualities ...int) (err error) {
 	format := strings.ToLower(filepath.Ext(filename))
 	okay := false
 	for _, ext := range []string{".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp"} {
@@ -56,6 +56,10 @@ func Save(img image.Image, filename string) (err error) {
 
 	switch format {
 	case ".jpg", ".jpeg":
+		quality := 95
+		if len(qualities) > 0 {
+			quality = qualities[0]
+		}
 		var rgba *image.RGBA
 		if nrgba, ok := img.(*image.NRGBA); ok {
 			if nrgba.Opaque() {
@@ -67,9 +71,9 @@ func Save(img image.Image, filename string) (err error) {
 			}
 		}
 		if rgba != nil {
-			err = jpeg.Encode(file, rgba, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(file, rgba, &jpeg.Options{Quality: quality})
 		} else {
-			err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(file, img, &jpeg.Options{Quality: quality})
 		}
 
 	case ".png":
