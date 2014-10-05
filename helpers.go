@@ -14,6 +14,7 @@ import (
 
 	"code.google.com/p/go.image/bmp"
 	"code.google.com/p/go.image/tiff"
+	"net/http"
 )
 
 // Open loads an image from file
@@ -25,6 +26,22 @@ func Open(filename string) (img image.Image, err error) {
 	defer file.Close()
 
 	img, _, err = image.Decode(file)
+	if err != nil {
+		return
+	}
+
+	img = toNRGBA(img)
+	return
+}
+
+func OpenUrl(url string) (img image.Image, err error) {
+	res, err := http.Get(url)
+	if err != nil {
+		return
+	}
+
+	img, _, err = image.Decode(res.Body)
+	res.Body.Close()
 	if err != nil {
 		return
 	}
