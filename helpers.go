@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	_ "image/gif"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"math"
@@ -34,11 +34,11 @@ func Open(filename string) (img image.Image, err error) {
 }
 
 // Save saves the image to file with the specified filename.
-// The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "tif" (or "tiff") and "bmp" are supported.
+// The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "tif" (or "tiff"), "bmp" and "gif" are supported.
 func Save(img image.Image, filename string) (err error) {
 	format := strings.ToLower(filepath.Ext(filename))
 	okay := false
-	for _, ext := range []string{".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp"} {
+	for _, ext := range []string{".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".gif"} {
 		if format == ext {
 			okay = true
 			break
@@ -78,6 +78,8 @@ func Save(img image.Image, filename string) (err error) {
 		err = tiff.Encode(file, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
 	case ".bmp":
 		err = bmp.Encode(file, img)
+	case ".gif":
+		err = gif.Encode(file, img, nil)
 	}
 	return
 }

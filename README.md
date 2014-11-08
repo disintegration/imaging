@@ -5,6 +5,8 @@ This package is based on the standard Go image package and works best along with
 
 ## Installation
 
+Imaging requires Go version 1.2 or greater.
+
     go get -u github.com/disintegration/imaging
 
 *[Git](http://git-scm.com/) and [Mercurial](http://mercurial.selenic.com/) are needed.*
@@ -172,7 +174,7 @@ dstImage = imaging.Invert(srcImage)
 #### Open, Save, New, Clone
 
 Imaging package provides useful shortcuts for image loading, saving, creation and copying.
-Open and Save functions support JPEG, PNG, TIFF and BMP images. 
+Open and Save functions support JPEG, PNG, TIFF, BMP and GIF images. 
 External libraries can be used to load other image formats.
 
 ```go
