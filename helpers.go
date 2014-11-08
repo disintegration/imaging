@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"code.google.com/p/go.image/bmp"
-	"code.google.com/p/go.image/tiff"
+	"golang.org/x/image/bmp"
+	"golang.org/x/image/tiff"
 )
 
 // Open loads an image from file
