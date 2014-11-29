@@ -11,7 +11,7 @@ To achieve maximum performance, make sure to allow Go to utilize all CPU cores:
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-Here is the complete example that loades several images, makes thumbnails of them
+Here is the complete example that loads several images, makes thumbnails of them
 and joins them together.
 
 	package main

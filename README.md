@@ -171,15 +171,27 @@ dstImage = imaging.Grayscale(srcImage)
 dstImage = imaging.Invert(srcImage)
 ```
 
-#### Open, Save, New, Clone
+#### Helpers
 
 Imaging package provides useful shortcuts for image loading, saving, creation and copying.
 Open and Save functions support JPEG, PNG, TIFF, BMP and GIF images. 
 External libraries can be used to load other image formats.
 
 ```go
+// read an image from io.Reader
+img, err := imaging.Decode(r) 
+if err != nil {
+    panic(err)
+}
+
 // load an image from file
 img, err := imaging.Open("src.png") 
+if err != nil {
+    panic(err)
+}
+
+// write the image to io.Writer
+err = imaging.Encode(w, img, imaging.PNG) 
 if err != nil {
     panic(err)
 }
@@ -199,7 +211,7 @@ copiedImg := imaging.Clone(img)
 
 
 ## Code example
-Here is the complete example that loades several images, makes thumbnails of them
+Here is the complete example that loads several images, makes thumbnails of them
 and joins them together.
 
 ```go

@@ -1,12 +1,13 @@
 package imaging
 
 import (
-	"fmt"
+	"errors"
 	"image"
 	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -16,46 +17,62 @@ import (
 	"golang.org/x/image/tiff"
 )
 
-// Open loads an image from file
-func Open(filename string) (img image.Image, err error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return
-	}
-	defer file.Close()
+type Format int
 
-	img, _, err = image.Decode(file)
-	if err != nil {
-		return
-	}
+const (
+	JPEG Format = iota
+	PNG
+	GIF
+	TIFF
+	BMP
+)
 
-	img = toNRGBA(img)
-	return
+func (f Format) String() string {
+	switch f {
+	case JPEG:
+		return "JPEG"
+	case PNG:
+		return "PNG"
+	case GIF:
+		return "GIF"
+	case TIFF:
+		return "TIFF"
+	case BMP:
+		return "BMP"
+	default:
+		return "Unsupported"
+	}
 }
 
-// Save saves the image to file with the specified filename.
-// The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "tif" (or "tiff"), "bmp" and "gif" are supported.
-func Save(img image.Image, filename string) (err error) {
-	format := strings.ToLower(filepath.Ext(filename))
-	okay := false
-	for _, ext := range []string{".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".gif"} {
-		if format == ext {
-			okay = true
-			break
-		}
-	}
-	if !okay {
-		return fmt.Errorf(`imaging: unsupported image format: "%s"`, format)
-	}
+var (
+	ErrUnsupportedFormat = errors.New("imaging: unsupported image format")
+)
 
-	file, err := os.Create(filename)
+// Decode reads an image from r.
+func Decode(r io.Reader) (image.Image, error) {
+	img, _, err := image.Decode(r)
 	if err != nil {
-		return
+		return nil, err
+	}
+	return toNRGBA(img), nil
+}
+
+// Open loads an image from file
+func Open(filename string) (image.Image, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
 	}
 	defer file.Close()
+	img, err := Decode(file)
+	return img, err
+}
 
+// Encode writes the image img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP).
+func Encode(w io.Writer, img image.Image, format Format) error {
+	var err error
 	switch format {
-	case ".jpg", ".jpeg":
+	case JPEG:
 		var rgba *image.RGBA
 		if nrgba, ok := img.(*image.NRGBA); ok {
 			if nrgba.Opaque() {
@@ -67,21 +84,51 @@ func Save(img image.Image, filename string) (err error) {
 			}
 		}
 		if rgba != nil {
-			err = jpeg.Encode(file, rgba, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(w, rgba, &jpeg.Options{Quality: 95})
 		} else {
-			err = jpeg.Encode(file, img, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(w, img, &jpeg.Options{Quality: 95})
 		}
 
-	case ".png":
-		err = png.Encode(file, img)
-	case ".tif", ".tiff":
-		err = tiff.Encode(file, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
-	case ".bmp":
-		err = bmp.Encode(file, img)
-	case ".gif":
-		err = gif.Encode(file, img, nil)
+	case PNG:
+		err = png.Encode(w, img)
+	case GIF:
+		err = gif.Encode(w, img, &gif.Options{NumColors: 256})
+	case TIFF:
+		err = tiff.Encode(w, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
+	case BMP:
+		err = bmp.Encode(w, img)
+	default:
+		err = ErrUnsupportedFormat
 	}
-	return
+	return err
+}
+
+// Save saves the image to file with the specified filename.
+// The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "gif", "tif" (or "tiff") and "bmp" are supported.
+func Save(img image.Image, filename string) (err error) {
+	formats := map[string]Format{
+		".jpg":  JPEG,
+		".jpeg": JPEG,
+		".png":  PNG,
+		".tif":  TIFF,
+		".tiff": TIFF,
+		".bmp":  BMP,
+		".gif":  GIF,
+	}
+
+	ext := strings.ToLower(filepath.Ext(filename))
+	f, ok := formats[ext]
+	if !ok {
+		return ErrUnsupportedFormat
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return Encode(file, img, f)
 }
 
 // New creates a new image with the specified width and height, and fills it with the specified color.
