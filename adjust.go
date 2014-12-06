@@ -6,7 +6,23 @@ import (
 	"math"
 )
 
-func applyColorMapping(img image.Image, fn func(c color.NRGBA) color.NRGBA) *image.NRGBA {
+// AdjustFunc applies the fn function to each pixel of the img image and returns the adjusted image.
+//
+// Example:
+//
+// 	dstImage = imaging.AdjustFunc(
+// 		srcImage,
+// 		func(c color.NRGBA) color.NRGBA {
+// 			// shift the red channel by 16
+//			r := int(c.R) + 16
+//			if r > 255 {
+// 				r = 255
+// 			}
+// 			return color.NRGBA{uint8(r), c.G, c.B, c.A}
+// 		}
+// 	)
+//
+func AdjustFunc(img image.Image, fn func(c color.NRGBA) color.NRGBA) *image.NRGBA {
 	src := toNRGBA(img)
 	width := src.Bounds().Max.X
 	height := src.Bounds().Max.Y
@@ -56,7 +72,7 @@ func AdjustGamma(img image.Image, gamma float64) *image.NRGBA {
 		return color.NRGBA{lut[c.R], lut[c.G], lut[c.B], c.A}
 	}
 
-	return applyColorMapping(img, fn)
+	return AdjustFunc(img, fn)
 }
 
 func sigmoid(a, b, x float64) float64 {
@@ -106,7 +122,7 @@ func AdjustSigmoid(img image.Image, midpoint, factor float64) *image.NRGBA {
 		return color.NRGBA{lut[c.R], lut[c.G], lut[c.B], c.A}
 	}
 
-	return applyColorMapping(img, fn)
+	return AdjustFunc(img, fn)
 }
 
 // AdjustContrast changes the contrast of the image using the percentage parameter and returns the adjusted image.
@@ -137,7 +153,7 @@ func AdjustContrast(img image.Image, percentage float64) *image.NRGBA {
 		return color.NRGBA{lut[c.R], lut[c.G], lut[c.B], c.A}
 	}
 
-	return applyColorMapping(img, fn)
+	return AdjustFunc(img, fn)
 }
 
 // AdjustBrightness changes the brightness of the image using the percentage parameter and returns the adjusted image.
@@ -162,7 +178,7 @@ func AdjustBrightness(img image.Image, percentage float64) *image.NRGBA {
 		return color.NRGBA{lut[c.R], lut[c.G], lut[c.B], c.A}
 	}
 
-	return applyColorMapping(img, fn)
+	return AdjustFunc(img, fn)
 }
 
 // Grayscale produces grayscale version of the image.
@@ -172,7 +188,7 @@ func Grayscale(img image.Image) *image.NRGBA {
 		y := uint8(f + 0.5)
 		return color.NRGBA{y, y, y, c.A}
 	}
-	return applyColorMapping(img, fn)
+	return AdjustFunc(img, fn)
 }
 
 // Invert produces inverted (negated) version of the image.
@@ -180,5 +196,5 @@ func Invert(img image.Image) *image.NRGBA {
 	fn := func(c color.NRGBA) color.NRGBA {
 		return color.NRGBA{255 - c.R, 255 - c.G, 255 - c.B, c.A}
 	}
-	return applyColorMapping(img, fn)
+	return AdjustFunc(img, fn)
 }

@@ -3,6 +3,7 @@ package imaging
 import (
 	"bytes"
 	"image"
+	"image/color"
 	"testing"
 )
 
@@ -67,7 +68,7 @@ func TestEncodeDecode(t *testing.T) {
 		}
 
 		if !compareNRGBA(img, img2cloned, delta) {
-			t.Errorf("fail comparing images format=%s %#v %#v", format, img, img2cloned)
+			t.Errorf("test [DecodeEncode %s] failed: %#v %#v", format, img, img2cloned)
 			continue
 		}
 	}
@@ -76,5 +77,218 @@ func TestEncodeDecode(t *testing.T) {
 	err := Encode(buf, imgWithAlpha, Format(100))
 	if err != ErrUnsupportedFormat {
 		t.Errorf("expected ErrUnsupportedFormat")
+	}
+}
+
+func TestNew(t *testing.T) {
+	td := []struct {
+		desc      string
+		w, h      int
+		c         color.Color
+		dstBounds image.Rectangle
+		dstPix    []uint8
+	}{
+		{
+			"New 1x1 black",
+			1, 1,
+			color.NRGBA{0, 0, 0, 0},
+			image.Rect(0, 0, 1, 1),
+			[]uint8{0x00, 0x00, 0x00, 0x00},
+		},
+		{
+			"New 1x2 red",
+			1, 2,
+			color.NRGBA{255, 0, 0, 255},
+			image.Rect(0, 0, 1, 2),
+			[]uint8{0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff},
+		},
+		{
+			"New 2x1 white",
+			2, 1,
+			color.NRGBA{255, 255, 255, 255},
+			image.Rect(0, 0, 2, 1),
+			[]uint8{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+		},
+	}
+
+	for _, d := range td {
+		got := New(d.w, d.h, d.c)
+		want := image.NewNRGBA(d.dstBounds)
+		want.Pix = d.dstPix
+		if !compareNRGBA(got, want, 0) {
+			t.Errorf("test [%s] failed: %#v", d.desc, got)
+		}
+	}
+}
+
+func TestClone(t *testing.T) {
+	td := []struct {
+		desc string
+		src  image.Image
+		want *image.NRGBA
+	}{
+		{
+			"Clone NRGBA",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+			},
+		},
+		{
+			"Clone NRGBA64",
+			&image.NRGBA64{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 8,
+				Pix: []uint8{
+					0x00, 0x00, 0x11, 0x11, 0x22, 0x22, 0x33, 0x33,
+					0xcc, 0xcc, 0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff,
+				},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+			},
+		},
+		{
+			"Clone RGBA",
+			&image.RGBA{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x00, 0x55, 0xaa, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+			},
+		},
+		{
+			"Clone RGBA64",
+			&image.RGBA64{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 8,
+				Pix: []uint8{
+					0x00, 0x00, 0x11, 0x11, 0x22, 0x22, 0x33, 0x33,
+					0xcc, 0xcc, 0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff,
+				},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x00, 0x55, 0xaa, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+			},
+		},
+		{
+			"Clone Gray",
+			&image.Gray{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 1,
+				Pix:    []uint8{0x11, 0xee},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x11, 0x11, 0x11, 0xff, 0xee, 0xee, 0xee, 0xff},
+			},
+		},
+		{
+			"Clone Gray16",
+			&image.Gray16{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 2,
+				Pix:    []uint8{0x11, 0x11, 0xee, 0xee},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0x11, 0x11, 0x11, 0xff, 0xee, 0xee, 0xee, 0xff},
+			},
+		},
+		{
+			"Clone Alpha",
+			&image.Alpha{
+				Rect:   image.Rect(-1, -1, 0, 1),
+				Stride: 1 * 1,
+				Pix:    []uint8{0x11, 0xee},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 2),
+				Stride: 1 * 4,
+				Pix:    []uint8{0xff, 0xff, 0xff, 0x11, 0xff, 0xff, 0xff, 0xee},
+			},
+		},
+		{
+			"Clone YCbCr",
+			&image.YCbCr{
+				Rect:           image.Rect(-1, -1, 5, 0),
+				SubsampleRatio: image.YCbCrSubsampleRatio444,
+				YStride:        6,
+				CStride:        6,
+				Y:              []uint8{0x00, 0xff, 0x7f, 0x26, 0x4b, 0x0e},
+				Cb:             []uint8{0x80, 0x80, 0x80, 0x6b, 0x56, 0xc0},
+				Cr:             []uint8{0x80, 0x80, 0x80, 0xc0, 0x4b, 0x76},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 6, 1),
+				Stride: 6 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0xff,
+					0xff, 0xff, 0xff, 0xff,
+					0x7f, 0x7f, 0x7f, 0xff,
+					0x7f, 0x00, 0x00, 0xff,
+					0x00, 0x7f, 0x00, 0xff,
+					0x00, 0x00, 0x7f, 0xff,
+				},
+			},
+		},
+		{
+			"Clone Paletted",
+			&image.Paletted{
+				Rect:   image.Rect(-1, -1, 5, 0),
+				Stride: 6 * 1,
+				Palette: color.Palette{
+					color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff},
+					color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff},
+					color.NRGBA{R: 0x7f, G: 0x7f, B: 0x7f, A: 0xff},
+					color.NRGBA{R: 0x7f, G: 0x00, B: 0x00, A: 0xff},
+					color.NRGBA{R: 0x00, G: 0x7f, B: 0x00, A: 0xff},
+					color.NRGBA{R: 0x00, G: 0x00, B: 0x7f, A: 0xff},
+				},
+				Pix: []uint8{0x0, 0x1, 0x2, 0x3, 0x4, 0x5},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 6, 1),
+				Stride: 6 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0xff,
+					0xff, 0xff, 0xff, 0xff,
+					0x7f, 0x7f, 0x7f, 0xff,
+					0x7f, 0x00, 0x00, 0xff,
+					0x00, 0x7f, 0x00, 0xff,
+					0x00, 0x00, 0x7f, 0xff,
+				},
+			},
+		},
+	}
+
+	for _, d := range td {
+		got := Clone(d.src)
+		want := d.want
+
+		delta := 0
+		if _, ok := d.src.(*image.YCbCr); ok {
+			delta = 1
+		}
+
+		if !compareNRGBA(got, want, delta) {
+			t.Errorf("test [%s] failed: %#v", d.desc, got)
+		}
 	}
 }

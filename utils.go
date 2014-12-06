@@ -1,6 +1,7 @@
 package imaging
 
 import (
+	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -51,4 +52,16 @@ func parallel(dataSize int, fn func(partStart, partEnd int)) {
 
 		wg.Wait()
 	}
+}
+
+func absint(i int) int {
+	if i < 0 {
+		return -i
+	}
+	return i
+}
+
+// clamp & round float64 to uint8 (0..255)
+func clamp(v float64) uint8 {
+	return uint8(math.Min(math.Max(v, 0.0), 255.0) + 0.5)
 }
