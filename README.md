@@ -3,125 +3,119 @@
 Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
 This package is based on the standard Go image package and works best along with it. 
 
+Image manipulation functions provided by the package take any image type 
+that implements `image.Image` interface as an input, and return a new image of 
+`*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
+
 ## Installation
 
 Imaging requires Go version 1.2 or greater.
 
     go get -u github.com/disintegration/imaging
-
-*[Git](http://git-scm.com/) and [Mercurial](http://mercurial.selenic.com/) are needed.*
     
 ## Documentation
 
 http://godoc.org/github.com/disintegration/imaging
 
-## Overview
+## Usage examples
 
-Image manipulation functions provided by the package take any image type 
-that implements `image.Image` interface as an input, and return a new image of 
-`*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
+A few usage examples can be found below. See the documentation for the full list of supported functions. 
 
-Some of examples below require importing standard `runtime`, `image` or `image/color` packages.
-
-```go 
-// allow Go to utilize all CPU cores:
-runtime.GOMAXPROCS(runtime.NumCPU())
-
-// resize srcImage to size = 800x600px using the high quality Lanczos filter
-dstImage := imaging.Resize(srcImage, 800, 600, imaging.Lanczos)
+### Image resizing
+```go
+// resize srcImage to size = 128x128px using the Lanczos filter
+dstImage128 := imaging.Resize(srcImage, 128, 128, imaging.Lanczos)
 
 // resize srcImage to width = 800px preserving the aspect ratio
-dstImage := imaging.Resize(srcImage, 800, 0, imaging.Lanczos)
+dstImage800 := imaging.Resize(srcImage, 800, 0, imaging.Lanczos)
 
 // scale down srcImage to fit the 800x600px bounding box
-dstImage := imaging.Fit(srcImage, 800, 600, imaging.Lanczos)
+dstImageFit := imaging.Fit(srcImage, 800, 600, imaging.Lanczos)
 
 // resize and crop the srcImage to make a 100x100px thumbnail
-dstImage := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
-
-// cut out a rectangular region from the image
-dstImage := imaging.Crop(srcImage, image.Rect(50, 50, 100, 100)) 
-
-// cut out a 100x100 px region from the center of the image
-dstImage := imaging.CropCenter(srcImage, 100, 100)   
-
-// paste the srcImage to the backgroundImage at the (50, 50) position
-dstImage := imaging.Paste(backgroundImage, srcImage, image.Pt(50, 50))     
-
-// paste the srcImage to the center of the backgroundImage
-dstImage := imaging.PasteCenter(backgroundImage, srcImage)                   
-
-// draw the srcImage over the backgroundImage at the (50, 50) position with opacity=0.5
-dstImage := imaging.Overlay(backgroundImage, srcImage, image.Pt(50, 50), 0.5)
-
-// blur the srcImage
-dstImage := imaging.Blur(srcImage, 4.5)
-
-// sharpen the srcImage
-dstImage := imaging.Sharpen(srcImage, 3.0)
-
-// gamma correction
-dstImage := imaging.AdjustGamma(srcImage, 0.7)
-
-// increase the brightness by 10%
-dstImage := imaging.AdjustBrightness(srcImage, 10) 
-
-// decrease the brightness by 15%
-dstImage := imaging.AdjustBrightness(srcImage, -15) 
-
-// increase the contrast by 20%
-dstImage := imaging.AdjustContrast(srcImage, 20)
-
-// decrease the contrast by 10%
-dstImage := imaging.AdjustContrast(srcImage, -10) 
-
-// increase the contrast using sigmoidal function
-dstImage := imaging.AdjustSigmoid(srcImage, 0.5, 3.0) 
-
-// decrease the contrast using sigmoidal function
-dstImage := imaging.AdjustSigmoid(srcImage, 0.5, -3.0)
-
-// produce the grayscaled version of an image
-dstImage := imaging.Grayscale(srcImage)
-
-// produce the inverted version of an image
-dstImage := imaging.Invert(srcImage)
-
-// read an image from io.Reader
-img, err := imaging.Decode(r) 
-if err != nil {
-    panic(err)
-}
-
-// load an image from file
-img, err := imaging.Open("src.png") 
-if err != nil {
-    panic(err)
-}
-
-// write the image to io.Writer
-err := imaging.Encode(w, img, imaging.PNG) 
-if err != nil {
-    panic(err)
-}
-
-// save the image to file
-err := imaging.Save(img, "dst.jpg") 
-if err != nil {
-    panic(err)
-}
-
-// create a new 800x600px image filled with red color
-newImg := imaging.New(800, 600, color.NRGBA{255, 0, 0, 255})
-
-// make a copy of the image
-copiedImg := imaging.Clone(img)
+dstImageThumb := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
 ```
 
+Imaging supports image resizing using various resampling filters. The most notable ones:
+- `NearestNeighbor` - Fastest resampling filter, no antialiasing.
+- `Box` - Simple and fast averaging filter appropriate for downscaling. When upscaling it's similar to NearestNeighbor.
+- `Linear` - Bilinear filter, smooth and reasonably fast.
+- `MitchellNetravali` - А smooth bicubic filter.
+- `CatmullRom` - A sharp bicubic filter. 
+- `Gaussian` - Blurring filter that uses gaussian function, useful for noise removal.
+- `Lanczos` - High-quality resampling filter for photographic images yielding sharp results, but it's slower than cubic filters.
 
-## Code example
-Here is the complete example that loads several images, makes thumbnails of them
-and joins them together.
+The full list of supported filters:  NearestNeighbor, Box, Linear, Hermite, MitchellNetravali, CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine. Custom filters can be created using ResampleFilter struct.
+
+**Resampling filters comparison**
+
+Original image. Will be resized from 512x512px to 128x128px. 
+
+![srcImage](http://disintegration.github.io/imaging/in_lena_bw_512.png)
+
+Filter | Resize result
+---|---
+`imaging.NearestNeighbor` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_nearest.png) 
+`imaging.Box` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_box.png)
+`imaging.Linear` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_linear.png)
+`imaging.MitchellNetravali` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_mitchell.png)
+`imaging.CatmullRom` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_catrom.png)
+`imaging.Gaussian` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_gaussian.png)
+`imaging.Lanczos` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_lanczos.png)
+
+### Gaussian Blur
+```go
+dstImage := imaging.Blur(srcImage, 0.5)
+```
+
+Sigma parameter allows to control the strength of the blurring effect.
+
+Original image | Sigma = 0.5 | Sigma = 1.5
+---|---|---
+![srcImage](http://disintegration.github.io/imaging/in_lena_bw_128.png) | ![dstImage](http://disintegration.github.io/imaging/out_blur_0.5.png) | ![dstImage](http://disintegration.github.io/imaging/out_blur_1.5.png)
+
+### Sharpening
+```go
+dstImage := imaging.Sharpen(srcImage, 0.5)
+```
+
+Uses gaussian function internally. Sigma parameter allows to control the strength of the sharpening effect.
+
+Original image | Sigma = 0.5 | Sigma = 1.5
+---|---|---
+![srcImage](http://disintegration.github.io/imaging/in_lena_bw_128.png) | ![dstImage](http://disintegration.github.io/imaging/out_sharpen_0.5.png) | ![dstImage](http://disintegration.github.io/imaging/out_sharpen_1.5.png)
+
+### Gamma correction
+```go
+dstImage := imaging.AdjustGamma(srcImage, 0.75)
+```
+
+Original image | Gamma = 0.75 | Gamma = 1.25
+---|---|---
+![srcImage](http://disintegration.github.io/imaging/in_lena_bw_128.png) | ![dstImage](http://disintegration.github.io/imaging/out_gamma_0.75.png) | ![dstImage](http://disintegration.github.io/imaging/out_gamma_1.25.png)
+
+### Contrast adjustment
+```go
+dstImage := imaging.AdjustContrast(srcImage, 20)
+```
+
+Original image | Contrast = 20 | Contrast = -20
+---|---|---
+![srcImage](http://disintegration.github.io/imaging/in_lena_bw_128.png) | ![dstImage](http://disintegration.github.io/imaging/out_contrast_p20.png) | ![dstImage](http://disintegration.github.io/imaging/out_contrast_m20.png)
+
+### Brightness adjustment
+```go
+dstImage := imaging.AdjustBrightness(srcImage, 20)
+```
+
+Original image | Brightness = 20 | Brightness = -20
+---|---|---
+![srcImage](http://disintegration.github.io/imaging/in_lena_bw_128.png) | ![dstImage](http://disintegration.github.io/imaging/out_brightness_p20.png) | ![dstImage](http://disintegration.github.io/imaging/out_brightness_m20.png)
+
+
+### Complete code example
+Here is the code example that loads several images, makes thumbnails of them
+and combines them together side-by-side.
 
 ```go
 package main
