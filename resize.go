@@ -290,7 +290,7 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 //
 // Usage example:
 //
-//		dstImage := imaging.Fit(srcImage, 100, 100, imaging.Lanczos)
+//		dstImage := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
 //
 func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
 	thumbW, thumbH := width, height
