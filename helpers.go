@@ -39,6 +39,12 @@ const (
 	BMP
 )
 
+var DefaultOptions = map[Format]interface{}{
+	JPEG: &jpeg.Options{Quality: 95},
+	GIF:  &gif.Options{NumColors: 256},
+	TIFF: &tiff.Options{Compression: tiff.Deflate, Predictor: true},
+}
+
 func (f Format) String() string {
 	switch f {
 	case JPEG:
@@ -80,8 +86,13 @@ func Open(filename string) (image.Image, error) {
 	return img, err
 }
 
-// Encode writes the image img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP).
+// Encode writes the image img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP) with the default options
 func Encode(w io.Writer, img image.Image, format Format) error {
+	return EncodeWithOptions(w, img, format, DefaultOptions[format])
+}
+
+// EncodeWithOptions writes the img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP) with custom options
+func EncodeWithOptions(w io.Writer, img image.Image, format Format, options interface{}) error {
 	var err error
 	switch format {
 	case JPEG:
@@ -96,17 +107,17 @@ func Encode(w io.Writer, img image.Image, format Format) error {
 			}
 		}
 		if rgba != nil {
-			err = jpeg.Encode(w, rgba, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(w, rgba, options.(*jpeg.Options))
 		} else {
-			err = jpeg.Encode(w, img, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(w, img, options.(*jpeg.Options))
 		}
 
 	case PNG:
 		err = png.Encode(w, img)
 	case GIF:
-		err = gif.Encode(w, img, &gif.Options{NumColors: 256})
+		err = gif.Encode(w, img, options.(*gif.Options))
 	case TIFF:
-		err = tiff.Encode(w, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
+		err = tiff.Encode(w, img, options.(*tiff.Options))
 	case BMP:
 		err = bmp.Encode(w, img)
 	default:
