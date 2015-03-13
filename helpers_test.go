@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"image"
 	"image/color"
+	"image/gif"
+	"image/jpeg"
 	"testing"
 )
 
@@ -68,6 +70,63 @@ func TestEncodeDecode(t *testing.T) {
 		}
 
 		if !compareNRGBA(img, img2cloned, delta) {
+			t.Errorf("test [DecodeEncode %s] failed: %#v %#v", format, img, img2cloned)
+			continue
+		}
+	}
+
+	buf := &bytes.Buffer{}
+	err := Encode(buf, imgWithAlpha, Format(100))
+	if err != ErrUnsupportedFormat {
+		t.Errorf("expected ErrUnsupportedFormat")
+	}
+}
+
+func TestEncodeWithOptionsDecode(t *testing.T) {
+	imgWithAlpha := image.NewNRGBA(image.Rect(0, 0, 3, 3))
+	imgWithAlpha.Pix = []uint8{
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+		127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138,
+		244, 245, 246, 247, 248, 249, 250, 252, 252, 253, 254, 255,
+	}
+
+	imgWithoutAlpha := image.NewNRGBA(image.Rect(0, 0, 3, 3))
+	imgWithoutAlpha.Pix = []uint8{
+		0, 1, 2, 255, 4, 5, 6, 255, 8, 9, 10, 255,
+		127, 128, 129, 255, 131, 132, 133, 255, 135, 136, 137, 255,
+		244, 245, 246, 255, 248, 249, 250, 255, 252, 253, 254, 255,
+	}
+
+	options := map[Format]interface{}{
+		JPEG: &jpeg.Options{Quality: 50},
+		GIF:  &gif.Options{NumColors: 200},
+	}
+
+	for _, format := range []Format{JPEG, GIF} {
+		img := imgWithoutAlpha
+
+		buf := &bytes.Buffer{}
+		err := EncodeWithOptions(buf, img, format, options[format])
+		if err != nil {
+			t.Errorf("fail encoding format %s", format)
+			continue
+		}
+
+		img2, err := Decode(buf)
+		if err != nil {
+			t.Errorf("fail decoding format %s", format)
+			continue
+		}
+		img2cloned := Clone(img2)
+
+		delta := 0
+		if format == JPEG {
+			delta = 3
+		} else if format == GIF {
+			delta = 16
+		}
+
+		if compareNRGBA(img, img2cloned, delta) {
 			t.Errorf("test [DecodeEncode %s] failed: %#v %#v", format, img, img2cloned)
 			continue
 		}
