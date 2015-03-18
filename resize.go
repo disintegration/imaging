@@ -5,6 +5,52 @@ import (
 	"math"
 )
 
+type iwpair struct {
+	i int
+	w int32
+}
+
+type pweights struct {
+	iwpairs []iwpair
+	wsum    int32
+}
+
+func precomputeWeights(dstSize, srcSize int, filter ResampleFilter) []pweights {
+	du := float64(srcSize) / float64(dstSize)
+	scale := du
+	if scale < 1.0 {
+		scale = 1.0
+	}
+	ru := math.Ceil(scale * filter.Support)
+
+	out := make([]pweights, dstSize)
+
+	for v := 0; v < dstSize; v++ {
+		fu := (float64(v)+0.5)*du - 0.5
+
+		startu := int(math.Ceil(fu - ru))
+		if startu < 0 {
+			startu = 0
+		}
+		endu := int(math.Floor(fu + ru))
+		if endu > srcSize-1 {
+			endu = srcSize - 1
+		}
+
+		wsum := int32(0)
+		for u := startu; u <= endu; u++ {
+			w := int32(0xff * filter.Kernel((float64(u)-fu)/scale))
+			if w != 0 {
+				wsum += w
+				out[v].iwpairs = append(out[v].iwpairs, iwpair{u, w})
+			}
+		}
+		out[v].wsum = wsum
+	}
+
+	return out
+}
+
 // Resize resizes the image to the specified width and height using the specified resampling
 // filter and returns the transformed image. If one of width or height is 0, the image aspect
 // ratio is preserved.
@@ -27,6 +73,7 @@ func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NR
 	}
 
 	src := toNRGBA(img)
+
 	srcW := src.Bounds().Max.X
 	srcH := src.Bounds().Max.Y
 
@@ -76,59 +123,27 @@ func resizeHorizontal(src *image.NRGBA, width int, filter ResampleFilter) *image
 
 	dst := image.NewNRGBA(image.Rect(0, 0, dstW, dstH))
 
-	dX := float64(srcW) / float64(dstW)
-	scaleX := math.Max(dX, 1.0)
-	rX := math.Ceil(scaleX * filter.Support)
+	weights := precomputeWeights(dstW, srcW, filter)
 
-	parallel(dstW, func(partStart, partEnd int) {
-
-		weights := make([]float64, int(rX+2)*2)
-
-		for dstX := partStart; dstX < partEnd; dstX++ {
-
-			fX := (float64(dstX)+0.5)*dX - 0.5
-
-			startX := int(math.Ceil(fX - rX))
-			if startX < 0 {
-				startX = 0
-			}
-			endX := int(math.Floor(fX + rX))
-			if endX > srcW-1 {
-				endX = srcW - 1
-			}
-
-			// cache weights
-			weightSum := 0.0
-			for x := startX; x <= endX; x++ {
-				w := filter.Kernel((float64(x) - fX) / scaleX)
-				weightSum += w
-				weights[x-startX] = w
-			}
-
-			for dstY := 0; dstY < dstH; dstY++ {
-				r, g, b, a := 0.0, 0.0, 0.0, 0.0
-				for x := startX; x <= endX; x++ {
-					weight := weights[x-startX]
-					i := dstY*src.Stride + x*4
-					r += float64(src.Pix[i+0]) * weight
-					g += float64(src.Pix[i+1]) * weight
-					b += float64(src.Pix[i+2]) * weight
-					a += float64(src.Pix[i+3]) * weight
+	parallel(dstH, func(partStart, partEnd int) {
+		for dstY := partStart; dstY < partEnd; dstY++ {
+			for dstX := 0; dstX < dstW; dstX++ {
+				var c [4]int32
+				for _, iw := range weights[dstX].iwpairs {
+					i := dstY*src.Stride + iw.i*4
+					c[0] += int32(src.Pix[i+0]) * iw.w
+					c[1] += int32(src.Pix[i+1]) * iw.w
+					c[2] += int32(src.Pix[i+2]) * iw.w
+					c[3] += int32(src.Pix[i+3]) * iw.w
 				}
-
-				r = math.Min(math.Max(r/weightSum, 0.0), 255.0)
-				g = math.Min(math.Max(g/weightSum, 0.0), 255.0)
-				b = math.Min(math.Max(b/weightSum, 0.0), 255.0)
-				a = math.Min(math.Max(a/weightSum, 0.0), 255.0)
-
 				j := dstY*dst.Stride + dstX*4
-				dst.Pix[j+0] = uint8(r + 0.5)
-				dst.Pix[j+1] = uint8(g + 0.5)
-				dst.Pix[j+2] = uint8(b + 0.5)
-				dst.Pix[j+3] = uint8(a + 0.5)
+				sum := weights[dstX].wsum
+				dst.Pix[j+0] = clampint32(int32(float32(c[0])/float32(sum) + 0.5))
+				dst.Pix[j+1] = clampint32(int32(float32(c[1])/float32(sum) + 0.5))
+				dst.Pix[j+2] = clampint32(int32(float32(c[2])/float32(sum) + 0.5))
+				dst.Pix[j+3] = clampint32(int32(float32(c[3])/float32(sum) + 0.5))
 			}
 		}
-
 	})
 
 	return dst
@@ -144,56 +159,26 @@ func resizeVertical(src *image.NRGBA, height int, filter ResampleFilter) *image.
 
 	dst := image.NewNRGBA(image.Rect(0, 0, dstW, dstH))
 
-	dY := float64(srcH) / float64(dstH)
-	scaleY := math.Max(dY, 1.0)
-	rY := math.Ceil(scaleY * filter.Support)
+	weights := precomputeWeights(dstH, srcH, filter)
 
-	parallel(dstH, func(partStart, partEnd int) {
+	parallel(dstW, func(partStart, partEnd int) {
 
-		weights := make([]float64, int(rY+2)*2)
-
-		for dstY := partStart; dstY < partEnd; dstY++ {
-
-			fY := (float64(dstY)+0.5)*dY - 0.5
-
-			startY := int(math.Ceil(fY - rY))
-			if startY < 0 {
-				startY = 0
-			}
-			endY := int(math.Floor(fY + rY))
-			if endY > srcH-1 {
-				endY = srcH - 1
-			}
-
-			// cache weights
-			weightSum := 0.0
-			for y := startY; y <= endY; y++ {
-				w := filter.Kernel((float64(y) - fY) / scaleY)
-				weightSum += w
-				weights[y-startY] = w
-			}
-
-			for dstX := 0; dstX < dstW; dstX++ {
-				r, g, b, a := 0.0, 0.0, 0.0, 0.0
-				for y := startY; y <= endY; y++ {
-					weight := weights[y-startY]
-					i := y*src.Stride + dstX*4
-					r += float64(src.Pix[i+0]) * weight
-					g += float64(src.Pix[i+1]) * weight
-					b += float64(src.Pix[i+2]) * weight
-					a += float64(src.Pix[i+3]) * weight
+		for dstX := partStart; dstX < partEnd; dstX++ {
+			for dstY := 0; dstY < dstH; dstY++ {
+				var c [4]int32
+				for _, iw := range weights[dstY].iwpairs {
+					i := iw.i*src.Stride + dstX*4
+					c[0] += int32(src.Pix[i+0]) * iw.w
+					c[1] += int32(src.Pix[i+1]) * iw.w
+					c[2] += int32(src.Pix[i+2]) * iw.w
+					c[3] += int32(src.Pix[i+3]) * iw.w
 				}
-
-				r = math.Min(math.Max(r/weightSum, 0.0), 255.0)
-				g = math.Min(math.Max(g/weightSum, 0.0), 255.0)
-				b = math.Min(math.Max(b/weightSum, 0.0), 255.0)
-				a = math.Min(math.Max(a/weightSum, 0.0), 255.0)
-
 				j := dstY*dst.Stride + dstX*4
-				dst.Pix[j+0] = uint8(r + 0.5)
-				dst.Pix[j+1] = uint8(g + 0.5)
-				dst.Pix[j+2] = uint8(b + 0.5)
-				dst.Pix[j+3] = uint8(a + 0.5)
+				sum := weights[dstY].wsum
+				dst.Pix[j+0] = clampint32(int32(float32(c[0])/float32(sum) + 0.5))
+				dst.Pix[j+1] = clampint32(int32(float32(c[1])/float32(sum) + 0.5))
+				dst.Pix[j+2] = clampint32(int32(float32(c[2])/float32(sum) + 0.5))
+				dst.Pix[j+3] = clampint32(int32(float32(c[3])/float32(sum) + 0.5))
 			}
 		}
 

@@ -19,7 +19,7 @@ func parallel(dataSize int, fn func(partStart, partEnd int)) {
 		numProcs := runtime.GOMAXPROCS(0)
 		if numProcs > 1 {
 			numGoroutines = numProcs
-			partSize = dataSize / (numGoroutines * 100)
+			partSize = dataSize / (numGoroutines * 10)
 			if partSize < 1 {
 				partSize = 1
 			}
@@ -64,4 +64,14 @@ func absint(i int) int {
 // clamp & round float64 to uint8 (0..255)
 func clamp(v float64) uint8 {
 	return uint8(math.Min(math.Max(v, 0.0), 255.0) + 0.5)
+}
+
+// clamp int32 to uint8 (0..255)
+func clampint32(v int32) uint8 {
+	if v < 0 {
+		return 0
+	} else if v > 255 {
+		return 255
+	}
+	return uint8(v)
 }
