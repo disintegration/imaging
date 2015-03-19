@@ -318,20 +318,59 @@ func Clone(img image.Image) *image.NRGBA {
 		parallel(dstH, func(partStart, partEnd int) {
 			for dstY := partStart; dstY < partEnd; dstY++ {
 				di := dst.PixOffset(0, dstY)
-				for dstX := 0; dstX < dstW; dstX++ {
-
-					srcX := srcMinX + dstX
-					srcY := srcMinY + dstY
-					siy := src.YOffset(srcX, srcY)
-					sic := src.COffset(srcX, srcY)
-					r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-					dst.Pix[di+0] = r
-					dst.Pix[di+1] = g
-					dst.Pix[di+2] = b
-					dst.Pix[di+3] = 0xff
-
-					di += 4
-
+				switch src.SubsampleRatio {
+				case image.YCbCrSubsampleRatio422:
+					siy0 := dstY * src.YStride
+					sic0 := dstY * src.CStride
+					for dstX := 0; dstX < dstW; dstX = dstX + 1 {
+						siy := siy0 + dstX
+						sic := sic0 + ((srcMinX+dstX)/2 - srcMinX/2)
+						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
+						dst.Pix[di+0] = r
+						dst.Pix[di+1] = g
+						dst.Pix[di+2] = b
+						dst.Pix[di+3] = 0xff
+						di += 4
+					}
+				case image.YCbCrSubsampleRatio420:
+					siy0 := dstY * src.YStride
+					sic0 := ((srcMinY+dstY)/2 - srcMinY/2) * src.CStride
+					for dstX := 0; dstX < dstW; dstX = dstX + 1 {
+						siy := siy0 + dstX
+						sic := sic0 + ((srcMinX+dstX)/2 - srcMinX/2)
+						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
+						dst.Pix[di+0] = r
+						dst.Pix[di+1] = g
+						dst.Pix[di+2] = b
+						dst.Pix[di+3] = 0xff
+						di += 4
+					}
+				case image.YCbCrSubsampleRatio440:
+					siy0 := dstY * src.YStride
+					sic0 := ((srcMinY+dstY)/2 - srcMinY/2) * src.CStride
+					for dstX := 0; dstX < dstW; dstX = dstX + 1 {
+						siy := siy0 + dstX
+						sic := sic0 + dstX
+						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
+						dst.Pix[di+0] = r
+						dst.Pix[di+1] = g
+						dst.Pix[di+2] = b
+						dst.Pix[di+3] = 0xff
+						di += 4
+					}
+				default:
+					siy0 := dstY * src.YStride
+					sic0 := dstY * src.CStride
+					for dstX := 0; dstX < dstW; dstX++ {
+						siy := siy0 + dstX
+						sic := sic0 + dstX
+						r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
+						dst.Pix[di+0] = r
+						dst.Pix[di+1] = g
+						dst.Pix[di+2] = b
+						dst.Pix[di+3] = 0xff
+						di += 4
+					}
 				}
 			}
 		})
