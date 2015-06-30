@@ -36,6 +36,23 @@ func CropCenter(img image.Image, width, height int) *image.NRGBA {
 	return Crop(img, image.Rect(x0, y0, x1, y1))
 }
 
+func CropTop(img image.Image, width, height int) *image.NRGBA {
+	cropW, cropH := width, height
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcMinX := srcBounds.Min.X
+
+	centerX := srcMinX + srcW/2
+
+	x0 := centerX - cropW/2
+	y0 := 0
+	x1 := x0 + cropW
+	y1 := y0 + cropH
+
+	return Crop(img, image.Rect(x0, y0, x1, y1))
+}
+
 // Paste pastes the img image to the background image at the specified position and returns the combined image.
 func Paste(background, img image.Image, pos image.Point) *image.NRGBA {
 	src := toNRGBA(img)
