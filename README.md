@@ -123,14 +123,11 @@ package main
 import (
     "image"
     "image/color"
-    "runtime"
     
     "github.com/disintegration/imaging"
 )
 
 func main() {
-    // use all CPU cores for maximum performance
-    runtime.GOMAXPROCS(runtime.NumCPU())
 
     // input files
     files := []string{"01.jpg", "02.jpg", "03.jpg"}

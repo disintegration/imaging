@@ -5,11 +5,6 @@ This package is based on the standard Go image package and works best along with
 Image manipulation functions provided by the package take any image type
 that implements `image.Image` interface as an input, and return a new image of
 `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
-
-Imaging package uses parallel goroutines for faster image processing.
-To achieve maximum performance, make sure to allow Go to utilize all CPU cores:
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
 */
 package imaging
 
