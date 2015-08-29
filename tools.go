@@ -5,6 +5,55 @@ import (
 	"math"
 )
 
+// Anchor is the anchor point for image alignment.
+type Anchor int
+
+const (
+	Center Anchor = iota
+	TopLeft
+	Top
+	TopRight
+	Left
+	Right
+	BottomLeft
+	Bottom
+	BottomRight
+)
+
+func anchorPt(b image.Rectangle, w, h int, anchor Anchor) image.Point {
+	var x, y int
+	switch anchor {
+	case TopLeft:
+		x = b.Min.X
+		y = b.Min.Y
+	case Top:
+		x = b.Min.X + (b.Dx()-w)/2
+		y = b.Min.Y
+	case TopRight:
+		x = b.Max.X - w
+		y = b.Min.Y
+	case Left:
+		x = b.Min.X
+		y = b.Min.Y + (b.Dy()-h)/2
+	case Right:
+		x = b.Max.X - w
+		y = b.Min.Y + (b.Dy()-h)/2
+	case BottomLeft:
+		x = b.Min.X
+		y = b.Max.Y - h
+	case Bottom:
+		x = b.Min.X + (b.Dx()-w)/2
+		y = b.Max.Y - h
+	case BottomRight:
+		x = b.Max.X - w
+		y = b.Max.Y - h
+	default:
+		x = b.Min.X + (b.Dx()-w)/2
+		y = b.Min.Y + (b.Dy()-h)/2
+	}
+	return image.Pt(x, y)
+}
+
 // Crop cuts out a rectangular region with the specified bounds
 // from the image and returns the cropped image.
 func Crop(img image.Image, rect image.Rectangle) *image.NRGBA {
@@ -14,26 +63,20 @@ func Crop(img image.Image, rect image.Rectangle) *image.NRGBA {
 	return Clone(sub) // New image Bounds().Min point will be (0, 0)
 }
 
+// CropAnchor cuts out a rectangular region with the specified size
+// from the image using the specified anchor point and returns the cropped image.
+func CropAnchor(img image.Image, width, height int, anchor Anchor) *image.NRGBA {
+	srcBounds := img.Bounds()
+	pt := anchorPt(srcBounds, width, height, anchor)
+	r := image.Rect(0, 0, width, height).Add(pt)
+	b := srcBounds.Intersect(r)
+	return Crop(img, b)
+}
+
 // CropCenter cuts out a rectangular region with the specified size
 // from the center of the image and returns the cropped image.
 func CropCenter(img image.Image, width, height int) *image.NRGBA {
-	cropW, cropH := width, height
-
-	srcBounds := img.Bounds()
-	srcW := srcBounds.Dx()
-	srcH := srcBounds.Dy()
-	srcMinX := srcBounds.Min.X
-	srcMinY := srcBounds.Min.Y
-
-	centerX := srcMinX + srcW/2
-	centerY := srcMinY + srcH/2
-
-	x0 := centerX - cropW/2
-	y0 := centerY - cropH/2
-	x1 := x0 + cropW
-	y1 := y0 + cropH
-
-	return Crop(img, image.Rect(x0, y0, x1, y1))
+	return CropAnchor(img, width, height, Center)
 }
 
 // Paste pastes the img image to the background image at the specified position and returns the combined image.
