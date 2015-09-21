@@ -5,6 +5,43 @@ import (
 	"math"
 )
 
+// Pixelate will pixelate an image using the color of the center most pixel within the given block-size.
+// blockSize parameter must be positive integer and indicates the pixelation size.
+//
+// Usage example:
+//
+//		dstImage := imaging.Pixelate(srcImage, 10)
+//
+func Pixelate(img image.Image, blockSize int) *image.NRGBA {
+	if blockSize <= 1 {
+		// blockSize parameter must be positive!
+		return Clone(img)
+	}
+
+	src := toNRGBA(img)
+	width := src.Bounds().Max.X
+	height := src.Bounds().Max.Y
+	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
+
+	// iterate through every block in the image
+	for i := 0; i < width; i += blockSize {
+		for j := 0; j < height; j += blockSize {
+
+			// Get the color of the pixel in the middle of the block
+			offset := int(blockSize / 2)
+			color := src.At(i+offset, j+offset)
+
+			// Loop through each pixel in the block, and set to color to the middle pixel color
+			for x := i; x <= (i + blockSize); x++ {
+				for y := j; y <= (j + blockSize); y++ {
+					dst.Set(x, y, color)
+				}
+			}
+		}
+	}
+	return dst
+}
+
 func gaussianBlurKernel(x, sigma float64) float64 {
 	return math.Exp(-(x*x)/(2*sigma*sigma)) / (sigma * math.Sqrt(2*math.Pi))
 }
