@@ -321,31 +321,7 @@ func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilt
 //		dstImage := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
 //
 func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA {
-	thumbW, thumbH := width, height
-
-	if thumbW <= 0 || thumbH <= 0 {
-		return &image.NRGBA{}
-	}
-
-	srcBounds := img.Bounds()
-	srcW := srcBounds.Dx()
-	srcH := srcBounds.Dy()
-
-	if srcW <= 0 || srcH <= 0 {
-		return &image.NRGBA{}
-	}
-
-	srcAspectRatio := float64(srcW) / float64(srcH)
-	thumbAspectRatio := float64(thumbW) / float64(thumbH)
-
-	var tmp image.Image
-	if srcAspectRatio > thumbAspectRatio {
-		tmp = Resize(img, 0, thumbH, filter)
-	} else {
-		tmp = Resize(img, thumbW, 0, filter)
-	}
-
-	return CropCenter(tmp, thumbW, thumbH)
+	return Fill(img, width, height, Center, filter)
 }
 
 // Resample filter struct. It can be used to make custom filters.
