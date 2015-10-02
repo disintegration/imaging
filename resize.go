@@ -267,15 +267,16 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 	return Resize(img, newW, newH, filter)
 }
 
-// Fill scales the image using the specified anchor point and the specified resample
-// filter to fit the specified minimum width and height and returns the transformed image.
+// Fill scales the image to the smallest possible size that will cover the specified dimensions,
+// crops the resized image to the specified dimensions using the given anchor point and returns
+// the transformed image.
 //
 // Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
 // CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
 //
 // Usage example:
 //
-//		dstImage := imaging.Fill(srcImage, 800, 600, imaging.Lanczos)
+//		dstImage := imaging.Fill(srcImage, 800, 600, imaging.Center, imaging.Lanczos)
 //
 func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilter) *image.NRGBA {
 	minW, minH := width, height
