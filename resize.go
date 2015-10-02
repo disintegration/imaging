@@ -267,6 +267,48 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 	return Resize(img, newW, newH, filter)
 }
 
+// Fill scales the image using the specified anchor point and the specified resample
+// filter to fit the specified minimum width and height and returns the transformed image.
+//
+// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
+// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
+//
+// Usage example:
+//
+//		dstImage := imaging.Fill(srcImage, 800, 600, imaging.Lanczos)
+//
+func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilter) *image.NRGBA {
+	minW, minH := width, height
+
+	if minW <= 0 || minH <= 0 {
+		return &image.NRGBA{}
+	}
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+
+	if srcW <= 0 || srcH <= 0 {
+		return &image.NRGBA{}
+	}
+
+	if srcW == minW && srcH == minH {
+		return Clone(img)
+	}
+
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	minAspectRatio := float64(minW) / float64(minH)
+
+	var tmp *image.NRGBA
+	if srcAspectRatio < minAspectRatio {
+		tmp = Resize(img, minW, 0, filter)
+	} else {
+		tmp = Resize(img, 0, minH, filter)
+	}
+
+	return CropAnchor(tmp, minW, minH, anchor)
+}
+
 // Thumbnail scales the image up or down using the specified resample filter, crops it
 // to the specified width and hight and returns the transformed image.
 //
