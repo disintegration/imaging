@@ -1,5 +1,9 @@
 # Imaging
 
+[![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
+[![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
+[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master)](https://coveralls.io/github/disintegration/imaging?branch=master)
+
 Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
 This package is based on the standard Go image package and works best along with it. 
 
