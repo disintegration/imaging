@@ -74,9 +74,21 @@ func TestEncodeDecode(t *testing.T) {
 	}
 
 	buf := &bytes.Buffer{}
-	err := Encode(buf, imgWithAlpha, Format(100))
+	err := Encode(buf, imgWithAlpha, JPEG)
+	if err != nil {
+		t.Errorf("failed encoding alpha to JPEG format %s", err)
+	}
+
+	buf = &bytes.Buffer{}
+	err = Encode(buf, imgWithAlpha, Format(100))
 	if err != ErrUnsupportedFormat {
 		t.Errorf("expected ErrUnsupportedFormat")
+	}
+
+	buf = bytes.NewBuffer([]byte("bad data"))
+	_, err = Decode(buf)
+	if err == nil {
+		t.Errorf("decoding bad data, expected error")
 	}
 }
 
@@ -108,6 +120,13 @@ func TestNew(t *testing.T) {
 			color.NRGBA{255, 255, 255, 255},
 			image.Rect(0, 0, 2, 1),
 			[]uint8{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+		},
+		{
+			"New 0x0 white",
+			0, 0,
+			color.NRGBA{255, 255, 255, 255},
+			image.Rect(0, 0, 0, 0),
+			nil,
 		},
 	}
 
@@ -159,30 +178,31 @@ func TestClone(t *testing.T) {
 		{
 			"Clone RGBA",
 			&image.RGBA{
-				Rect:   image.Rect(-1, -1, 0, 1),
+				Rect:   image.Rect(-1, -1, 0, 2),
 				Stride: 1 * 4,
-				Pix:    []uint8{0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+				Pix:    []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff},
 			},
 			&image.NRGBA{
-				Rect:   image.Rect(0, 0, 1, 2),
+				Rect:   image.Rect(0, 0, 1, 3),
 				Stride: 1 * 4,
-				Pix:    []uint8{0x00, 0x55, 0xaa, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+				Pix:    []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x55, 0xaa, 0x33, 0xcc, 0xdd, 0xee, 0xff},
 			},
 		},
 		{
 			"Clone RGBA64",
 			&image.RGBA64{
-				Rect:   image.Rect(-1, -1, 0, 1),
+				Rect:   image.Rect(-1, -1, 0, 2),
 				Stride: 1 * 8,
 				Pix: []uint8{
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 					0x00, 0x00, 0x11, 0x11, 0x22, 0x22, 0x33, 0x33,
 					0xcc, 0xcc, 0xdd, 0xdd, 0xee, 0xee, 0xff, 0xff,
 				},
 			},
 			&image.NRGBA{
-				Rect:   image.Rect(0, 0, 1, 2),
+				Rect:   image.Rect(0, 0, 1, 3),
 				Stride: 1 * 4,
-				Pix:    []uint8{0x00, 0x55, 0xaa, 0x33, 0xcc, 0xdd, 0xee, 0xff},
+				Pix:    []uint8{0x00, 0x00, 0x00, 0x00, 0x00, 0x55, 0xaa, 0x33, 0xcc, 0xdd, 0xee, 0xff},
 			},
 		},
 		{
@@ -356,6 +376,24 @@ func TestClone(t *testing.T) {
 
 		if !compareNRGBA(got, want, delta) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
+		}
+	}
+}
+
+func TestFormats(t *testing.T) {
+	formatNames := map[Format]string{
+		JPEG:       "JPEG",
+		PNG:        "PNG",
+		GIF:        "GIF",
+		BMP:        "BMP",
+		TIFF:       "TIFF",
+		Format(-1): "Unsupported",
+	}
+	for format, name := range formatNames {
+		got := format.String()
+		if got != name {
+			t.Errorf("test [Format names] failed: got %#v want %#v", got, name)
+			continue
 		}
 	}
 }

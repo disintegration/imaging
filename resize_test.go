@@ -115,6 +115,45 @@ func TestResize(t *testing.T) {
 				},
 			},
 		},
+		{
+			"Resize 0x0 1x1 box",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, -1, -1),
+				Stride: 0,
+				Pix:    []uint8{},
+			},
+			1, 1,
+			Box,
+			&image.NRGBA{},
+		},
+		{
+			"Resize 2x2 0x0 box",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, 1, 1),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff,
+					0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff,
+				},
+			},
+			0, 0,
+			Box,
+			&image.NRGBA{},
+		},
+		{
+			"Resize 2x2 -1x0 box",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, 1, 1),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff,
+					0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff,
+				},
+			},
+			-1, 0,
+			Box,
+			&image.NRGBA{},
+		},
 	}
 	for _, d := range td {
 		got := Resize(d.src, d.w, d.h, d.f)
@@ -122,6 +161,43 @@ func TestResize(t *testing.T) {
 		if !compareNRGBA(got, want, 1) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+
+	for i, filter := range []ResampleFilter{
+		NearestNeighbor,
+		Box,
+		Linear,
+		Hermite,
+		MitchellNetravali,
+		CatmullRom,
+		BSpline,
+		Gaussian,
+		Lanczos,
+		Hann,
+		Hamming,
+		Blackman,
+		Bartlett,
+		Welch,
+		Cosine,
+	} {
+		src := image.NewNRGBA(image.Rect(-1, -1, 2, 3))
+		got := Resize(src, 5, 6, filter)
+		want := image.NewNRGBA(image.Rect(0, 0, 5, 6))
+		if !compareNRGBA(got, want, 0) {
+			t.Errorf("test [Resize all filters #%d] failed: %#v", i, got)
+		}
+
+		if filter.Kernel != nil {
+			x := filter.Kernel(filter.Support + 0.0001)
+			if x != 0 {
+				t.Errorf("test [ResampleFilter edge cases #%d] failed: %f", i, x)
+			}
+		}
+	}
+
+	bcs2 := bcspline(2, 1, 0)
+	if bcs2 != 0 {
+		t.Errorf("test [bcspline 2] failed: %f", bcs2)
 	}
 }
 
@@ -189,6 +265,45 @@ func TestFit(t *testing.T) {
 					0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff,
 				},
 			},
+		},
+		{
+			"Fit 0x0 1x1 box",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, -1, -1),
+				Stride: 0,
+				Pix:    []uint8{},
+			},
+			1, 1,
+			Box,
+			&image.NRGBA{},
+		},
+		{
+			"Fit 2x2 0x0 box",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, 1, 1),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff,
+					0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff,
+				},
+			},
+			0, 0,
+			Box,
+			&image.NRGBA{},
+		},
+		{
+			"Fit 2x2 -1x0 box",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, 1, 1),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0xff,
+					0x00, 0xff, 0x00, 0xff, 0x00, 0x00, 0xff, 0xff,
+				},
+			},
+			-1, 0,
+			Box,
+			&image.NRGBA{},
 		},
 	}
 	for _, d := range td {

@@ -59,3 +59,23 @@ func TestClamp(t *testing.T) {
 		}
 	}
 }
+
+func TestClampint32(t *testing.T) {
+	td := []struct {
+		i int32
+		u uint8
+	}{
+		{0, 0},
+		{255, 255},
+		{128, 128},
+		{256, 255},
+		{2500, 255},
+		{-10, 0},
+	}
+
+	for _, d := range td {
+		if clampint32(d.i) != d.u {
+			t.Errorf("test [clampint32 %v %v] failed: %v", d.i, d.u, clampint32(d.i))
+		}
+	}
+}
