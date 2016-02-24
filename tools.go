@@ -180,3 +180,22 @@ func Overlay(background, img image.Image, pos image.Point, opacity float64) *ima
 
 	return dst
 }
+
+// OverlayCenter overlays the img image to the center of the background image and
+// returns the combined image. Opacity parameter is the opacity of the img
+// image layer, used to compose the images, it must be from 0.0 to 1.0.
+func OverlayCenter(background, img image.Image, opacity float64) *image.NRGBA {
+	bgBounds := background.Bounds()
+	bgW := bgBounds.Dx()
+	bgH := bgBounds.Dy()
+	bgMinX := bgBounds.Min.X
+	bgMinY := bgBounds.Min.Y
+
+	centerX := bgMinX + bgW/2
+	centerY := bgMinY + bgH/2
+
+	x0 := centerX - img.Bounds().Dx()/2
+	y0 := centerY - img.Bounds().Dy()/2
+
+	return Overlay(background, img, image.Point{x0, y0}, opacity)
+}
