@@ -603,3 +603,50 @@ func TestOverlay(t *testing.T) {
 		}
 	}
 }
+
+func TestOverlayCenter(t *testing.T) {
+	td := []struct {
+		desc string
+		src1 image.Image
+		src2 image.Image
+		a    float64
+		want *image.NRGBA
+	}{
+		{
+			"OverlayCenter 2x3 2x1",
+			&image.NRGBA{
+				Rect:   image.Rect(-1, -1, 1, 2),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x10, 0x10, 0x10, 0xff, 0x10, 0x10, 0x10, 0xff,
+					0x10, 0x10, 0x10, 0xff, 0x10, 0x10, 0x10, 0xff,
+					0x10, 0x10, 0x10, 0xff, 0x10, 0x10, 0x10, 0xff,
+				},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(1, 1, 3, 2),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+				},
+			},
+			0.5,
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 2, 3),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x10, 0x10, 0x10, 0xff, 0x10, 0x10, 0x10, 0xff,
+					0x2c, 0x2c, 0x2c, 0xff, 0x2c, 0x2c, 0x2c, 0xff,
+					0x10, 0x10, 0x10, 0xff, 0x10, 0x10, 0x10, 0xff,
+				},
+			},
+		},
+	}
+	for _, d := range td {
+		got := OverlayCenter(d.src1, d.src2, 0.5)
+		want := d.want
+		if !compareNRGBA(got, want, 0) {
+			t.Errorf("test [%s] failed: %#v", d.desc, got)
+		}
+	}
+}
