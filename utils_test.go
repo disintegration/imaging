@@ -60,22 +60,10 @@ func TestClamp(t *testing.T) {
 	}
 }
 
-func TestClampint32(t *testing.T) {
-	td := []struct {
-		i int32
-		u uint8
-	}{
-		{0, 0},
-		{255, 255},
-		{128, 128},
-		{256, 255},
-		{2500, 255},
-		{-10, 0},
-	}
-
-	for _, d := range td {
-		if clampint32(d.i) != d.u {
-			t.Errorf("test [clampint32 %v %v] failed: %v", d.i, d.u, clampint32(d.i))
+func BenchmarkClamp(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for _, x := range []float64{0.49, 0.51, 254.1, 254.9, 128, -1, 256} {
+			clamp(x)
 		}
 	}
 }
