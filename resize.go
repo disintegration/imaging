@@ -5,17 +5,12 @@ import (
 	"math"
 )
 
-type iwpair struct {
-	i int
-	w float64
+type indexWeight struct {
+	index  int
+	weight float64
 }
 
-type pweights struct {
-	iwpairs []iwpair
-	invsum  float64
-}
-
-func precomputeWeights(dstSize, srcSize int, filter ResampleFilter) []pweights {
+func precomputeWeights(dstSize, srcSize int, filter ResampleFilter) [][]indexWeight {
 	du := float64(srcSize) / float64(dstSize)
 	scale := du
 	if scale < 1.0 {
@@ -23,7 +18,7 @@ func precomputeWeights(dstSize, srcSize int, filter ResampleFilter) []pweights {
 	}
 	ru := math.Ceil(scale * filter.Support)
 
-	out := make([]pweights, dstSize)
+	out := make([][]indexWeight, dstSize)
 
 	for v := 0; v < dstSize; v++ {
 		fu := (float64(v)+0.5)*du - 0.5
@@ -42,10 +37,14 @@ func precomputeWeights(dstSize, srcSize int, filter ResampleFilter) []pweights {
 			w := filter.Kernel((float64(u) - fu) / scale)
 			if w != 0 {
 				sum += w
-				out[v].iwpairs = append(out[v].iwpairs, iwpair{u, w})
+				out[v] = append(out[v], indexWeight{index: u, weight: w})
 			}
 		}
-		out[v].invsum = 1 / sum
+		if sum != 0 {
+			for i := range out[v] {
+				out[v][i].weight /= sum
+			}
+		}
 	}
 
 	return out
@@ -131,20 +130,22 @@ func resizeHorizontal(src *image.NRGBA, width int, filter ResampleFilter) *image
 			j0 := dstY * dst.Stride
 			for dstX := 0; dstX < dstW; dstX++ {
 				var r, g, b, a float64
-				for _, iw := range weights[dstX].iwpairs {
-					i := i0 + iw.i*4
-					aw := float64(src.Pix[i+3]) * iw.w
+				for _, w := range weights[dstX] {
+					i := i0 + w.index*4
+					aw := float64(src.Pix[i+3]) * w.weight
 					r += float64(src.Pix[i+0]) * aw
 					g += float64(src.Pix[i+1]) * aw
 					b += float64(src.Pix[i+2]) * aw
 					a += aw
 				}
-				j := j0 + dstX*4
-				aInv := 1 / a
-				dst.Pix[j+0] = clamp(r * aInv)
-				dst.Pix[j+1] = clamp(g * aInv)
-				dst.Pix[j+2] = clamp(b * aInv)
-				dst.Pix[j+3] = clamp(a * weights[dstX].invsum)
+				if a != 0 {
+					aInv := 1 / a
+					j := j0 + dstX*4
+					dst.Pix[j+0] = clamp(r * aInv)
+					dst.Pix[j+1] = clamp(g * aInv)
+					dst.Pix[j+2] = clamp(b * aInv)
+					dst.Pix[j+3] = clamp(a)
+				}
 			}
 		}
 	})
@@ -168,20 +169,22 @@ func resizeVertical(src *image.NRGBA, height int, filter ResampleFilter) *image.
 		for dstX := partStart; dstX < partEnd; dstX++ {
 			for dstY := 0; dstY < dstH; dstY++ {
 				var r, g, b, a float64
-				for _, iw := range weights[dstY].iwpairs {
-					i := iw.i*src.Stride + dstX*4
-					aw := float64(src.Pix[i+3]) * iw.w
+				for _, w := range weights[dstY] {
+					i := w.index*src.Stride + dstX*4
+					aw := float64(src.Pix[i+3]) * w.weight
 					r += float64(src.Pix[i+0]) * aw
 					g += float64(src.Pix[i+1]) * aw
 					b += float64(src.Pix[i+2]) * aw
 					a += aw
 				}
-				j := dstY*dst.Stride + dstX*4
-				aInv := 1 / a
-				dst.Pix[j+0] = clamp(r * aInv)
-				dst.Pix[j+1] = clamp(g * aInv)
-				dst.Pix[j+2] = clamp(b * aInv)
-				dst.Pix[j+3] = clamp(a * weights[dstY].invsum)
+				if a != 0 {
+					aInv := 1 / a
+					j := dstY*dst.Stride + dstX*4
+					dst.Pix[j+0] = clamp(r * aInv)
+					dst.Pix[j+1] = clamp(g * aInv)
+					dst.Pix[j+2] = clamp(b * aInv)
+					dst.Pix[j+3] = clamp(a)
+				}
 			}
 		}
 	})
