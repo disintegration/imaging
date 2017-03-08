@@ -57,15 +57,15 @@ Original image. Will be resized from 512x512px to 128x128px.
 
 ![srcImage](http://disintegration.github.io/imaging/in_lena_bw_512.png)
 
-Filter | Resize result
----|---
-`imaging.NearestNeighbor` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_nearest.png) 
-`imaging.Box` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_box.png)
-`imaging.Linear` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_linear.png)
-`imaging.MitchellNetravali` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_mitchell.png)
-`imaging.CatmullRom` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_catrom.png)
-`imaging.Gaussian` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_gaussian.png)
-`imaging.Lanczos` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_lanczos.png)
+Filter | Resize result | Speed compared to `imaging.NearestNeighbor`
+---|---|:-:
+`imaging.NearestNeighbor` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_nearest.png)    | 100%
+`imaging.Box` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_box.png)                    | 91%
+`imaging.Linear` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_linear.png)              | 67%
+`imaging.MitchellNetravali` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_mitchell.png) | 40%
+`imaging.CatmullRom` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_catrom.png)          | 40%
+`imaging.Gaussian` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_gaussian.png)          | 42%
+`imaging.Lanczos` | ![dstImage](http://disintegration.github.io/imaging/out_resize_down_lanczos.png)            | 29%
 
 **Resize functions comparison**
 
