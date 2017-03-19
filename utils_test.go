@@ -59,11 +59,3 @@ func TestClamp(t *testing.T) {
 		}
 	}
 }
-
-func BenchmarkClamp(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		for _, x := range []float64{0.49, 0.51, 254.1, 254.9, 128, -1, 256} {
-			clamp(x)
-		}
-	}
-}

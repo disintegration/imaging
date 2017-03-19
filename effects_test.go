@@ -88,6 +88,26 @@ func TestBlur(t *testing.T) {
 	}
 }
 
+func TestBlurGolden(t *testing.T) {
+	src, err := Open("testdata/lena_128.png")
+	if err != nil {
+		t.Errorf("Open: %v", err)
+	}
+	for name, sigma := range map[string]float64{
+		"out_blur_0.5.png": 0.5,
+		"out_blur_1.5.png": 1.5,
+	} {
+		got := Blur(src, sigma)
+		want, err := Open("testdata/" + name)
+		if err != nil {
+			t.Errorf("Open: %v", err)
+		}
+		if !compareNRGBA(got, toNRGBA(want), 0) {
+			t.Errorf("resulting image differs from golden: %s", name)
+		}
+	}
+}
+
 func TestSharpen(t *testing.T) {
 	td := []struct {
 		desc  string
@@ -185,6 +205,26 @@ func TestSharpen(t *testing.T) {
 		want := d.want
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
+		}
+	}
+}
+
+func TestSharpenGolden(t *testing.T) {
+	src, err := Open("testdata/lena_128.png")
+	if err != nil {
+		t.Errorf("Open: %v", err)
+	}
+	for name, sigma := range map[string]float64{
+		"out_sharpen_0.5.png": 0.5,
+		"out_sharpen_1.5.png": 1.5,
+	} {
+		got := Sharpen(src, sigma)
+		want, err := Open("testdata/" + name)
+		if err != nil {
+			t.Errorf("Open: %v", err)
+		}
+		if !compareNRGBA(got, toNRGBA(want), 0) {
+			t.Errorf("resulting image differs from golden: %s", name)
 		}
 	}
 }

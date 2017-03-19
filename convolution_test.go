@@ -2,7 +2,6 @@ package imaging
 
 import (
 	"image"
-	"image/color"
 	"testing"
 )
 
@@ -234,14 +233,12 @@ func TestConvolve5x5(t *testing.T) {
 }
 
 func BenchmarkConvolve3x3(b *testing.B) {
-	r := image.Rect(0, 0, 500, 500)
-	img := image.NewRGBA(r)
-	for x := r.Min.X; x < r.Max.X; x++ {
-		for y := r.Min.Y; y < r.Max.Y; y++ {
-			img.SetRGBA(x, y, color.RGBA{uint8(x % 255), uint8(y % 255), uint8((x + y) % 255), 255})
-		}
+	b.StopTimer()
+	img, err := Open("testdata/lena_512.png")
+	if err != nil {
+		b.Fatalf("Open: %v", err)
 	}
-	b.ResetTimer()
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		Convolve3x3(
 			img,
@@ -256,14 +253,12 @@ func BenchmarkConvolve3x3(b *testing.B) {
 }
 
 func BenchmarkConvolve5x5(b *testing.B) {
-	r := image.Rect(0, 0, 500, 500)
-	img := image.NewRGBA(r)
-	for x := r.Min.X; x < r.Max.X; x++ {
-		for y := r.Min.Y; y < r.Max.Y; y++ {
-			img.SetRGBA(x, y, color.RGBA{uint8(x % 255), uint8(y % 255), uint8((x + y) % 255), 255})
-		}
+	b.StopTimer()
+	img, err := Open("testdata/lena_512.png")
+	if err != nil {
+		b.Fatalf("Open: %v", err)
 	}
-	b.ResetTimer()
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		Convolve5x5(
 			img,

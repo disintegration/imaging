@@ -2,7 +2,6 @@ package imaging
 
 import (
 	"image"
-	"image/color"
 	"testing"
 )
 
@@ -159,7 +158,7 @@ func TestResize(t *testing.T) {
 	for _, d := range td {
 		got := Resize(d.src, d.w, d.h, d.f)
 		want := d.want
-		if !compareNRGBA(got, want, 1) {
+		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
 	}
@@ -199,6 +198,28 @@ func TestResize(t *testing.T) {
 	bcs2 := bcspline(2, 1, 0)
 	if bcs2 != 0 {
 		t.Errorf("test [bcspline 2] failed: %f", bcs2)
+	}
+}
+
+func TestResizeGolden(t *testing.T) {
+	src, err := Open("testdata/lena_512.png")
+	if err != nil {
+		t.Errorf("Open: %v", err)
+	}
+	for name, filter := range map[string]ResampleFilter{
+		"out_resize_nearest.png": NearestNeighbor,
+		"out_resize_linear.png":  Linear,
+		"out_resize_catrom.png":  CatmullRom,
+		"out_resize_lanczos.png": Lanczos,
+	} {
+		got := Resize(src, 128, 0, filter)
+		want, err := Open("testdata/" + name)
+		if err != nil {
+			t.Errorf("Open: %v", err)
+		}
+		if !compareNRGBA(got, toNRGBA(want), 0) {
+			t.Errorf("resulting image differs from golden: %s", name)
+		}
 	}
 }
 
@@ -571,39 +592,37 @@ func TestThumbnail(t *testing.T) {
 }
 
 func BenchmarkResizeLanczosUp(b *testing.B) {
-	benchmarkResize(b, 50, 500, Lanczos)
+	benchmarkResize(b, "testdata/lena_128.png", 512, Lanczos)
 }
 
 func BenchmarkResizeLinearUp(b *testing.B) {
-	benchmarkResize(b, 50, 500, Linear)
+	benchmarkResize(b, "testdata/lena_128.png", 512, Linear)
 }
 
 func BenchmarkResizeNearestNeighborUp(b *testing.B) {
-	benchmarkResize(b, 50, 500, NearestNeighbor)
+	benchmarkResize(b, "testdata/lena_128.png", 512, NearestNeighbor)
 }
 
 func BenchmarkResizeLanczosDown(b *testing.B) {
-	benchmarkResize(b, 500, 50, Lanczos)
+	benchmarkResize(b, "testdata/lena_512.png", 128, Lanczos)
 }
 
 func BenchmarkResizeLinearDown(b *testing.B) {
-	benchmarkResize(b, 500, 50, Linear)
+	benchmarkResize(b, "testdata/lena_512.png", 128, Linear)
 }
 
 func BenchmarkResizeNearestNeighborDown(b *testing.B) {
-	benchmarkResize(b, 500, 50, NearestNeighbor)
+	benchmarkResize(b, "testdata/lena_512.png", 128, NearestNeighbor)
 }
 
-func benchmarkResize(b *testing.B, size1, size2 int, f ResampleFilter) {
-	r := image.Rect(0, 0, size1, size1)
-	img := image.NewRGBA(r)
-	for x := r.Min.X; x < r.Max.X; x++ {
-		for y := r.Min.Y; y < r.Max.Y; y++ {
-			img.SetRGBA(x, y, color.RGBA{uint8(x % 255), uint8(y % 255), uint8((x + y) % 255), 255})
-		}
+func benchmarkResize(b *testing.B, filename string, size int, f ResampleFilter) {
+	b.StopTimer()
+	img, err := Open(filename)
+	if err != nil {
+		b.Fatalf("Open: %v", err)
 	}
-	b.ResetTimer()
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		Resize(img, size2, size2, f)
+		Resize(img, size, size, f)
 	}
 }
