@@ -108,6 +108,18 @@ func TestBlurGolden(t *testing.T) {
 	}
 }
 
+func BenchmarkBlur(b *testing.B) {
+	b.StopTimer()
+	img, err := Open("testdata/lena_512.png")
+	if err != nil {
+		b.Fatalf("Open: %v", err)
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		Blur(img, 3)
+	}
+}
+
 func TestSharpen(t *testing.T) {
 	td := []struct {
 		desc  string
@@ -226,5 +238,17 @@ func TestSharpenGolden(t *testing.T) {
 		if !compareNRGBA(got, toNRGBA(want), 0) {
 			t.Errorf("resulting image differs from golden: %s", name)
 		}
+	}
+}
+
+func BenchmarkSharpen(b *testing.B) {
+	b.StopTimer()
+	img, err := Open("testdata/lena_512.png")
+	if err != nil {
+		b.Fatalf("Open: %v", err)
+	}
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		Sharpen(img, 3)
 	}
 }
