@@ -15,7 +15,7 @@ func testParallelN(enabled bool, n, procs int) bool {
 		}
 	})
 	for i := 0; i < n; i++ {
-		if data[i] != true {
+		if !data[i] {
 			return false
 		}
 	}
@@ -27,7 +27,7 @@ func TestParallel(t *testing.T) {
 	for _, e := range []bool{true, false} {
 		for _, n := range []int{1, 10, 100, 1000} {
 			for _, p := range []int{1, 2, 4, 8, 16, 100} {
-				if testParallelN(e, n, p) != true {
+				if !testParallelN(e, n, p) {
 					t.Errorf("test [parallel %v %d %d] failed", e, n, p)
 				}
 			}
