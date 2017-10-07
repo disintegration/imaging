@@ -203,13 +203,53 @@ func copyYCbCr(dst *image.NRGBA, src *image.YCbCr) {
 			for dstX := 0; dstX < dstW; dstX++ {
 				srcX := srcMinX + dstX
 				srcY := srcMinY + dstY
-				siy := src.YOffset(srcX, srcY)
-				sic := src.COffset(srcX, srcY)
-				r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-				dst.Pix[di+0] = r
-				dst.Pix[di+1] = g
-				dst.Pix[di+2] = b
+
+				siy := (srcY-src.Rect.Min.Y)*src.YStride + (srcX - src.Rect.Min.X)
+
+				var sic int
+				switch src.SubsampleRatio {
+				case image.YCbCrSubsampleRatio444:
+					sic = (srcY-src.Rect.Min.Y)*src.CStride + (srcX - src.Rect.Min.X)
+				case image.YCbCrSubsampleRatio422:
+					sic = (srcY-src.Rect.Min.Y)*src.CStride + (srcX/2 - src.Rect.Min.X/2)
+				case image.YCbCrSubsampleRatio420:
+					sic = (srcY/2-src.Rect.Min.Y/2)*src.CStride + (srcX/2 - src.Rect.Min.X/2)
+				case image.YCbCrSubsampleRatio440:
+					sic = (srcY/2-src.Rect.Min.Y/2)*src.CStride + (srcX - src.Rect.Min.X)
+				default:
+					sic = src.COffset(srcX, srcY)
+				}
+
+				yy1 := int32(src.Y[siy]) * 0x10101
+				cb1 := int32(src.Cb[sic]) - 128
+				cr1 := int32(src.Cr[sic]) - 128
+
+				r := yy1 + 91881*cr1
+				if uint32(r)&0xff000000 == 0 {
+					r >>= 16
+				} else {
+					r = ^(r >> 31)
+				}
+
+				g := yy1 - 22554*cb1 - 46802*cr1
+				if uint32(g)&0xff000000 == 0 {
+					g >>= 16
+				} else {
+					g = ^(g >> 31)
+				}
+
+				b := yy1 + 116130*cb1
+				if uint32(b)&0xff000000 == 0 {
+					b >>= 16
+				} else {
+					b = ^(b >> 31)
+				}
+
+				dst.Pix[di+0] = uint8(r)
+				dst.Pix[di+1] = uint8(g)
+				dst.Pix[di+2] = uint8(b)
 				dst.Pix[di+3] = 0xff
+
 				di += 4
 			}
 		}
