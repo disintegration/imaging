@@ -199,56 +199,56 @@ func copyYCbCr(dst *image.NRGBA, src *image.YCbCr) {
 	dstH := dst.Rect.Dy()
 	parallel(dstH, func(partStart, partEnd int) {
 		for dstY := partStart; dstY < partEnd; dstY++ {
+			srcY := srcMinY + dstY
 			di := dst.PixOffset(0, dstY)
 			for dstX := 0; dstX < dstW; dstX++ {
 				srcX := srcMinX + dstX
-				srcY := srcMinY + dstY
 
-				siy := (srcY-src.Rect.Min.Y)*src.YStride + (srcX - src.Rect.Min.X)
+				siy := (srcY-srcMinY)*src.YStride + (srcX - srcMinX)
 
 				var sic int
 				switch src.SubsampleRatio {
 				case image.YCbCrSubsampleRatio444:
-					sic = (srcY-src.Rect.Min.Y)*src.CStride + (srcX - src.Rect.Min.X)
+					sic = (srcY-srcMinY)*src.CStride + (srcX - srcMinX)
 				case image.YCbCrSubsampleRatio422:
-					sic = (srcY-src.Rect.Min.Y)*src.CStride + (srcX/2 - src.Rect.Min.X/2)
+					sic = (srcY-srcMinY)*src.CStride + (srcX/2 - srcMinX/2)
 				case image.YCbCrSubsampleRatio420:
-					sic = (srcY/2-src.Rect.Min.Y/2)*src.CStride + (srcX/2 - src.Rect.Min.X/2)
+					sic = (srcY/2-srcMinY/2)*src.CStride + (srcX/2 - srcMinX/2)
 				case image.YCbCrSubsampleRatio440:
-					sic = (srcY/2-src.Rect.Min.Y/2)*src.CStride + (srcX - src.Rect.Min.X)
+					sic = (srcY/2-srcMinY/2)*src.CStride + (srcX - srcMinX)
 				default:
 					sic = src.COffset(srcX, srcY)
 				}
 
-				yy1 := int32(src.Y[siy]) * 0x10101
-				cb1 := int32(src.Cb[sic]) - 128
-				cr1 := int32(src.Cr[sic]) - 128
+				y := int32(src.Y[siy])
+				cb := int32(src.Cb[sic]) - 128
+				cr := int32(src.Cr[sic]) - 128
 
-				r := yy1 + 91881*cr1
-				if uint32(r)&0xff000000 == 0 {
-					r >>= 16
-				} else {
-					r = ^(r >> 31)
+				r := (y<<16 + 91881*cr + 1<<15) >> 16
+				if r > 255 {
+					r = 255
+				} else if r < 0 {
+					r = 0
 				}
 
-				g := yy1 - 22554*cb1 - 46802*cr1
-				if uint32(g)&0xff000000 == 0 {
-					g >>= 16
-				} else {
-					g = ^(g >> 31)
+				g := (y<<16 - 22554*cb - 46802*cr + 1<<15) >> 16
+				if g > 255 {
+					g = 255
+				} else if g < 0 {
+					g = 0
 				}
 
-				b := yy1 + 116130*cb1
-				if uint32(b)&0xff000000 == 0 {
-					b >>= 16
-				} else {
-					b = ^(b >> 31)
+				b := (y<<16 + 116130*cb + 1<<15) >> 16
+				if b > 255 {
+					b = 255
+				} else if b < 0 {
+					b = 0
 				}
 
 				dst.Pix[di+0] = uint8(r)
 				dst.Pix[di+1] = uint8(g)
 				dst.Pix[di+2] = uint8(b)
-				dst.Pix[di+3] = 0xff
+				dst.Pix[di+3] = 255
 
 				di += 4
 			}
