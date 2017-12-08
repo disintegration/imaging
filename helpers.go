@@ -77,7 +77,11 @@ func Open(filename string) (image.Image, error) {
 }
 
 // Encode writes the image img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP).
-func Encode(w io.Writer, img image.Image, format Format) error {
+func Encode(w io.Writer, img image.Image, format Format, qualityJPEG ...int) error {
+	quality := qualityJPEG[0]
+	if quality == 0 {
+		quality = 95
+	}
 	var err error
 	switch format {
 	case JPEG:
@@ -92,9 +96,9 @@ func Encode(w io.Writer, img image.Image, format Format) error {
 			}
 		}
 		if rgba != nil {
-			err = jpeg.Encode(w, rgba, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(w, rgba, &jpeg.Options{Quality: quality})
 		} else {
-			err = jpeg.Encode(w, img, &jpeg.Options{Quality: 95})
+			err = jpeg.Encode(w, img, &jpeg.Options{Quality: quality})
 		}
 
 	case PNG:
@@ -113,7 +117,10 @@ func Encode(w io.Writer, img image.Image, format Format) error {
 
 // Save saves the image to file with the specified filename.
 // The format is determined from the filename extension: "jpg" (or "jpeg"), "png", "gif", "tif" (or "tiff") and "bmp" are supported.
-func Save(img image.Image, filename string) (err error) {
+func Save(img image.Image, filename string, qualityJPEG ...int) (err error) {
+	if len(qualityJPEG) == 0 {
+		qualityJPEG[0] = 95
+	}
 	formats := map[string]Format{
 		".jpg":  JPEG,
 		".jpeg": JPEG,
@@ -136,7 +143,21 @@ func Save(img image.Image, filename string) (err error) {
 	}
 	defer file.Close()
 
-	return Encode(file, img, f)
+	return Encode(file, img, f, qualityJPEG[0])
+}
+
+func GetSmallestSide(img image.Image) (smallestSide string) {
+	x, y := GetSides(img)
+	if x < y {
+		return "x"
+	}else {
+		return "y"
+	}
+}
+
+func GetSides(img image.Image) (x int, y int) {
+	bounds := img.Bounds()
+	return bounds.Max.X, bounds.Max.Y
 }
 
 // New creates a new image with the specified width and height, and fills it with the specified color.
