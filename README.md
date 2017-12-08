@@ -1,4 +1,4 @@
-# Imaging (modified - Reducing JPEG quality)
+# Imaging
 
 [![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
 [![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
@@ -15,11 +15,11 @@ that implements `image.Image` interface as an input, and return a new image of
 
 Imaging requires Go version 1.2 or greater.
 
-    go get -u github.com/demuzx/imaging
+    go get -u github.com/disintegration/imaging
     
 ## Documentation
 
-http://godoc.org/github.com/demuzx/imaging
+http://godoc.org/github.com/disintegration/imaging
 
 ## Usage examples
 
