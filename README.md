@@ -1,4 +1,4 @@
-# Imaging
+# Imaging (modified - Reducing JPEG quality)
 
 [![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
 [![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
@@ -15,11 +15,11 @@ that implements `image.Image` interface as an input, and return a new image of
 
 Imaging requires Go version 1.2 or greater.
 
-    go get -u github.com/disintegration/imaging
+    go get -u github.com/demuzx/imaging
     
 ## Documentation
 
-http://godoc.org/github.com/disintegration/imaging
+http://godoc.org/github.com/demuzx/imaging
 
 ## Usage examples
 
@@ -39,6 +39,27 @@ dstImageFit := imaging.Fit(srcImage, 800, 600, imaging.Lanczos)
 
 // Resize and crop the srcImage to fill the 100x100px area.
 dstImageFill := imaging.Fill(srcImage, 100, 100, imaging.Center, imaging.Lanczos)
+```
+
+### Get smallest side of image
+
+```go
+// Get smallest side of image. Returns "x", or "y"
+src, _ := imaging.Open("some_picture.jpg") 
+smallestSide := imaging.GetSmallestSide(src)
+````
+
+### Get length of sides. Returns two values (x, y int).
+x, y := imaging.GetSides(src)
+
+
+### Save file and reduce(if need) JPEG quality
+```go
+// Set JPEG option "Quality" to 80%, and save the resulting image using JPEG format.
+err = imaging.Save(dst, "testdata/out_example.jpg", 80)
+if err != nil {
+    log.Fatalf("Save failed: %v", err)
+}
 ```
 
 Imaging supports image resizing using various resampling filters. The most notable ones:
@@ -132,6 +153,7 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"fmt"
 
 	"github.com/disintegration/imaging"
 )
@@ -142,6 +164,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Open failed: %v", err)
 	}
+
+    // Get X and Y sides in pixels
+    x, y := imaging.GetSides(src)
+    fmt.Printf("x:%v, y:%v", x, y)
+
+    // Get smallest side of the original image
+    smallestSide := imaging.GetSmallestSide(src)
+    fmt.Println("Smallest side is", smallestSide)
 
 	// Crop the original image to 350x350px size using the center anchor.
 	src = imaging.CropAnchor(src, 350, 350, imaging.Center)
@@ -178,8 +208,8 @@ func main() {
 	dst = imaging.Paste(dst, img3, image.Pt(256, 0))
 	dst = imaging.Paste(dst, img4, image.Pt(256, 256))
 
-	// Save the resulting image using JPEG format.
-	err = imaging.Save(dst, "testdata/out_example.jpg")
+	// Set JPEG option "Quality" to 80%, and save the resulting image using JPEG format.
+	err = imaging.Save(dst, "testdata/out_example.jpg", 80)
 	if err != nil {
 		log.Fatalf("Save failed: %v", err)
 	}
