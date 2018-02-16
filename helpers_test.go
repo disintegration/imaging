@@ -17,7 +17,7 @@ func compareNRGBA(img1, img2 *image.NRGBA, delta int) bool {
 	}
 
 	for i := 0; i < len(img1.Pix); i++ {
-		if absint(int(img1.Pix[i])-int(img2.Pix[i])) > delta {
+		if absint(int(img1.Pix[i]) - int(img2.Pix[i])) > delta {
 			return false
 		}
 	}
@@ -40,7 +40,7 @@ func TestEncodeDecode(t *testing.T) {
 		244, 245, 246, 255, 248, 249, 250, 255, 252, 253, 254, 255,
 	}
 
-	for _, format := range []Format{JPEG, PNG, GIF, BMP, TIFF} {
+	for _, format := range []Format{JPEG, PNG, GIF, BMP, TIFF, WEBP} {
 		img := imgWithoutAlpha
 		if format == PNG {
 			img = imgWithAlpha
@@ -77,6 +77,12 @@ func TestEncodeDecode(t *testing.T) {
 	err := Encode(buf, imgWithAlpha, JPEG)
 	if err != nil {
 		t.Errorf("failed encoding alpha to JPEG format %s", err)
+	}
+
+	buf = &bytes.Buffer{}
+	err = Encode(buf, imgWithAlpha, JPEG, JPEGQuality(90))
+	if err != nil {
+		t.Errorf("failed encoding alpha to JPEG format %s with quality 90", err)
 	}
 
 	buf = &bytes.Buffer{}
@@ -147,6 +153,7 @@ func TestFormats(t *testing.T) {
 		GIF:        "GIF",
 		BMP:        "BMP",
 		TIFF:       "TIFF",
+		WEBP:       "WEBP",
 		Format(-1): "Unsupported",
 	}
 	for format, name := range formatNames {

@@ -32,6 +32,7 @@ const (
 	GIF
 	TIFF
 	BMP
+	WEBP
 )
 
 func (f Format) String() string {
@@ -46,6 +47,8 @@ func (f Format) String() string {
 		return "TIFF"
 	case BMP:
 		return "BMP"
+	case WEBP:
+		return "WEBP"
 	default:
 		return "Unsupported"
 	}
@@ -129,6 +132,11 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 		err = tiff.Encode(w, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
 	case BMP:
 		err = bmp.Encode(w, img)
+	case WEBP:
+		/**
+		@todo it's the workaround for now
+		 */
+		err = png.Encode(w, img)
 	default:
 		err = ErrUnsupportedFormat
 	}
@@ -155,6 +163,7 @@ func Save(img image.Image, filename string, opts ...EncodeOption) (err error) {
 		".tiff": TIFF,
 		".bmp":  BMP,
 		".gif":  GIF,
+		".webp": WEBP,
 	}
 
 	ext := strings.ToLower(filepath.Ext(filename))
@@ -189,11 +198,11 @@ func New(width, height int, fillColor color.Color) *image.NRGBA {
 
 	// fill the first row
 	for x := 0; x < width; x++ {
-		copy(dst.Pix[x*4:(x+1)*4], cs)
+		copy(dst.Pix[x * 4:(x + 1) * 4], cs)
 	}
 	// copy the first row to other rows
 	for y := 1; y < height; y++ {
-		copy(dst.Pix[y*dst.Stride:y*dst.Stride+width*4], dst.Pix[0:width*4])
+		copy(dst.Pix[y * dst.Stride:y * dst.Stride + width * 4], dst.Pix[0:width * 4])
 	}
 
 	return dst
