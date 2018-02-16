@@ -147,6 +147,7 @@ func TestFormats(t *testing.T) {
 		GIF:        "GIF",
 		BMP:        "BMP",
 		TIFF:       "TIFF",
+		WEBP:   	"WEBP",
 		Format(-1): "Unsupported",
 	}
 	for format, name := range formatNames {
