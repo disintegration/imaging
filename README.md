@@ -6,7 +6,9 @@
 
 
 [![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
-[![Build Status](https://travis-ci.org/AarioAi/imaging.svg?branch=master)](https://travis-ci.org/AarioAi/imaging)[![Coverage Status](https://coveralls.io/repos/github/AarioAi/imaging/badge.svg)](https://coveralls.io/github/AarioAi/imaging)
+[![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
+[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master)](https://coveralls.io/github/disintegration/imaging?branch=master)
+
 
 
 Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
@@ -37,7 +39,6 @@ imaging.Save() supports theses image types:
 Imaging requires Go version 1.2 or greater.
 
     Support Webp   go get -u github.com/AarioAi/imaging
-    Unsupport Webp go get -u github.com/disintegration/imaging
 
     
 ## Documentation

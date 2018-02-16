@@ -2,7 +2,8 @@
 # Imaging
 
 [![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
-[![Build Status](https://travis-ci.org/AarioAi/imaging.svg?branch=master)](https://travis-ci.org/AarioAi/imaging)[![Coverage Status](https://coveralls.io/repos/github/AarioAi/imaging/badge.svg)](https://coveralls.io/github/AarioAi/imaging)
+[![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
+[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master)](https://coveralls.io/github/disintegration/imaging?branch=master)
 
 Imaging 基于 Go 语言图片标准库实现对图片调整尺寸、翻转、裁剪等常用的图片处理功能。
 
