@@ -40,7 +40,7 @@ func TestEncodeDecode(t *testing.T) {
 		244, 245, 246, 255, 248, 249, 250, 255, 252, 253, 254, 255,
 	}
 
-	for _, format := range []Format{JPEG, PNG, GIF, BMP, TIFF} {
+	for _, format := range []Format{JPEG, PNG, GIF, BMP, TIFF, WEBP} {
 		img := imgWithoutAlpha
 		if format == PNG {
 			img = imgWithAlpha
