@@ -80,6 +80,12 @@ func TestEncodeDecode(t *testing.T) {
 	}
 
 	buf = &bytes.Buffer{}
+	err = Encode(buf, imgWithAlpha, JPEG, JPEGQuality(90))
+	if err != nil {
+		t.Errorf("failed encoding alpha to JPEG format %s", err)
+	}
+
+	buf = &bytes.Buffer{}
 	err = Encode(buf, imgWithAlpha, Format(100))
 	if err != ErrUnsupportedFormat {
 		t.Errorf("expected ErrUnsupportedFormat")
