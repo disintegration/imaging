@@ -17,7 +17,7 @@ func compareNRGBA(img1, img2 *image.NRGBA, delta int) bool {
 	}
 
 	for i := 0; i < len(img1.Pix); i++ {
-		if absint(int(img1.Pix[i])-int(img2.Pix[i])) > delta {
+		if absint(int(img1.Pix[i]) - int(img2.Pix[i])) > delta {
 			return false
 		}
 	}
@@ -147,7 +147,7 @@ func TestFormats(t *testing.T) {
 		GIF:        "GIF",
 		BMP:        "BMP",
 		TIFF:       "TIFF",
-		WEBP:   	"WEBP",
+		WEBP:       "WEBP",
 		Format(-1): "Unsupported",
 	}
 	for format, name := range formatNames {
