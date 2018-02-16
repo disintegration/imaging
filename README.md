@@ -6,9 +6,7 @@
 
 
 [![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
-[![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
-[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master)](https://coveralls.io/github/disintegration/imaging?branch=master)
-
+[![Build Status](https://travis-ci.org/AarioAi/imaging.svg?branch=master)](https://travis-ci.org/AarioAi/imaging)[![Coverage Status](https://coveralls.io/repos/github/AarioAi/imaging/badge.svg)](https://coveralls.io/github/AarioAi/imaging)
 
 
 Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
