@@ -30,6 +30,10 @@ imaging.Save() supports theses image types:
 * GIF : .gif 
 * WEBP: .webp    
 
+## Todo
+* support saving to progressive images
+* encode manipulated images into real webp type
+
 ## Installation
 
 Imaging requires Go version 1.2 or greater.

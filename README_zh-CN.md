@@ -21,6 +21,9 @@ imaging.Save() 支持保存任何类型图片为以下后缀：
 * GIF : .gif 
 * WEBP: .webp 
 
+## Todo
+* 保持图片为渐进式
+* 编码保存 Webp 图片
 
 ## 如何安装
 
