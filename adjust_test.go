@@ -42,6 +42,13 @@ func TestGrayscale(t *testing.T) {
 	}
 }
 
+func BenchmarkGrayscale(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Grayscale(testdataBranchesJPG)
+	}
+}
+
 func TestInvert(t *testing.T) {
 	td := []struct {
 		desc string
@@ -76,6 +83,13 @@ func TestInvert(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+}
+
+func BenchmarkInvert(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Invert(testdataBranchesJPG)
 	}
 }
 
@@ -207,15 +221,11 @@ func TestAdjustContrast(t *testing.T) {
 }
 
 func TestAdjustContrastGolden(t *testing.T) {
-	src, err := Open("testdata/lena_128.png")
-	if err != nil {
-		t.Errorf("Open: %v", err)
-	}
 	for name, p := range map[string]float64{
-		"out_contrast_m10.png": -10,
-		"out_contrast_p10.png": 10,
+		"out_contrast_m15.png": -15,
+		"out_contrast_p15.png": 15,
 	} {
-		got := AdjustContrast(src, p)
+		got := AdjustContrast(testdataFlowersSmallPNG, p)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Errorf("Open: %v", err)
@@ -223,6 +233,13 @@ func TestAdjustContrastGolden(t *testing.T) {
 		if !compareNRGBA(got, toNRGBA(want), 0) {
 			t.Errorf("resulting image differs from golden: %s", name)
 		}
+	}
+}
+
+func BenchmarkAdjustContrast(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		AdjustContrast(testdataBranchesJPG, 10)
 	}
 }
 
@@ -354,15 +371,11 @@ func TestAdjustBrightness(t *testing.T) {
 }
 
 func TestAdjustBrightnessGolden(t *testing.T) {
-	src, err := Open("testdata/lena_128.png")
-	if err != nil {
-		t.Errorf("Open: %v", err)
-	}
 	for name, p := range map[string]float64{
 		"out_brightness_m10.png": -10,
 		"out_brightness_p10.png": 10,
 	} {
-		got := AdjustBrightness(src, p)
+		got := AdjustBrightness(testdataFlowersSmallPNG, p)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Errorf("Open: %v", err)
@@ -370,6 +383,13 @@ func TestAdjustBrightnessGolden(t *testing.T) {
 		if !compareNRGBA(got, toNRGBA(want), 0) {
 			t.Errorf("resulting image differs from golden: %s", name)
 		}
+	}
+}
+
+func BenchmarkAdjustBrightness(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		AdjustBrightness(testdataBranchesJPG, 10)
 	}
 }
 
@@ -457,15 +477,11 @@ func TestAdjustGamma(t *testing.T) {
 }
 
 func TestAdjustGammaGolden(t *testing.T) {
-	src, err := Open("testdata/lena_128.png")
-	if err != nil {
-		t.Errorf("Open: %v", err)
-	}
 	for name, g := range map[string]float64{
 		"out_gamma_0.75.png": 0.75,
 		"out_gamma_1.25.png": 1.25,
 	} {
-		got := AdjustGamma(src, g)
+		got := AdjustGamma(testdataFlowersSmallPNG, g)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Errorf("Open: %v", err)
@@ -473,6 +489,13 @@ func TestAdjustGammaGolden(t *testing.T) {
 		if !compareNRGBA(got, toNRGBA(want), 0) {
 			t.Errorf("resulting image differs from golden: %s", name)
 		}
+	}
+}
+
+func BenchmarkAdjustGamma(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		AdjustGamma(testdataBranchesJPG, 1.5)
 	}
 }
 
@@ -560,5 +583,12 @@ func TestAdjustSigmoid(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+}
+
+func BenchmarkAdjustSigmoid(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		AdjustSigmoid(testdataBranchesJPG, 0.5, 3.0)
 	}
 }

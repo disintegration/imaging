@@ -9,20 +9,20 @@ import (
 )
 
 func Example() {
-	// Open the test image.
-	src, err := imaging.Open("testdata/lena_512.png")
+	// Open a test image.
+	src, err := imaging.Open("testdata/flowers.png")
 	if err != nil {
 		log.Fatalf("Open failed: %v", err)
 	}
 
-	// Crop the original image to 350x350px size using the center anchor.
-	src = imaging.CropAnchor(src, 350, 350, imaging.Center)
+	// Crop the original image to 300x300px size using the center anchor.
+	src = imaging.CropAnchor(src, 300, 300, imaging.Center)
 
-	// Resize the cropped image to width = 256px preserving the aspect ratio.
-	src = imaging.Resize(src, 256, 0, imaging.Lanczos)
+	// Resize the cropped image to width = 200px preserving the aspect ratio.
+	src = imaging.Resize(src, 200, 0, imaging.Lanczos)
 
 	// Create a blurred version of the image.
-	img1 := imaging.Blur(src, 2)
+	img1 := imaging.Blur(src, 5)
 
 	// Create a grayscale version of the image with higher contrast and sharpness.
 	img2 := imaging.Grayscale(src)
@@ -44,13 +44,13 @@ func Example() {
 	)
 
 	// Create a new image and paste the four produced images into it.
-	dst := imaging.New(512, 512, color.NRGBA{0, 0, 0, 0})
+	dst := imaging.New(400, 400, color.NRGBA{0, 0, 0, 0})
 	dst = imaging.Paste(dst, img1, image.Pt(0, 0))
-	dst = imaging.Paste(dst, img2, image.Pt(0, 256))
-	dst = imaging.Paste(dst, img3, image.Pt(256, 0))
-	dst = imaging.Paste(dst, img4, image.Pt(256, 256))
+	dst = imaging.Paste(dst, img2, image.Pt(0, 200))
+	dst = imaging.Paste(dst, img3, image.Pt(200, 0))
+	dst = imaging.Paste(dst, img4, image.Pt(200, 200))
 
-	// Save the resulting image using JPEG format.
+	// Save the resulting image as JPEG.
 	err = imaging.Save(dst, "testdata/out_example.jpg")
 	if err != nil {
 		log.Fatalf("Save failed: %v", err)

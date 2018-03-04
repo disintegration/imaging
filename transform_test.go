@@ -43,6 +43,13 @@ func TestFlipH(t *testing.T) {
 	}
 }
 
+func BenchmarkFlipH(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		FlipH(testdataBranchesJPG)
+	}
+}
+
 func TestFlipV(t *testing.T) {
 	td := []struct {
 		desc string
@@ -77,6 +84,13 @@ func TestFlipV(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+}
+
+func BenchmarkFlipV(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		FlipV(testdataBranchesJPG)
 	}
 }
 
@@ -116,6 +130,13 @@ func TestTranspose(t *testing.T) {
 	}
 }
 
+func BenchmarkTranspose(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Transpose(testdataBranchesJPG)
+	}
+}
+
 func TestTransverse(t *testing.T) {
 	td := []struct {
 		desc string
@@ -152,6 +173,13 @@ func TestTransverse(t *testing.T) {
 	}
 }
 
+func BenchmarkTransverse(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Transverse(testdataBranchesJPG)
+	}
+}
+
 func TestRotate90(t *testing.T) {
 	td := []struct {
 		desc string
@@ -185,6 +213,13 @@ func TestRotate90(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+}
+
+func BenchmarkRotate90(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Rotate90(testdataBranchesJPG)
 	}
 }
 
@@ -225,6 +260,13 @@ func TestRotate180(t *testing.T) {
 	}
 }
 
+func BenchmarkRotate180(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Rotate180(testdataBranchesJPG)
+	}
+}
+
 func TestRotate270(t *testing.T) {
 	td := []struct {
 		desc string
@@ -258,6 +300,13 @@ func TestRotate270(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+}
+
+func BenchmarkRotate270(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Rotate270(testdataBranchesJPG)
 	}
 }
 
@@ -577,5 +626,12 @@ func TestRotate(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", test.desc, got)
 		}
+	}
+}
+
+func BenchmarkRotate(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Rotate(testdataBranchesJPG, 30, color.Transparent)
 	}
 }

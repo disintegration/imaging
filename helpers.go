@@ -1,9 +1,3 @@
-// Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.).
-// This package is based on the standard Go image package and works best along with it.
-//
-// Image manipulation functions provided by the package take any image type
-// that implements `image.Image` interface as an input, and return a new image of
-// `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
 package imaging
 
 import (
@@ -59,10 +53,7 @@ var (
 // Decode reads an image from r.
 func Decode(r io.Reader) (image.Image, error) {
 	img, _, err := image.Decode(r)
-	if err != nil {
-		return nil, err
-	}
-	return toNRGBA(img), nil
+	return img, err
 }
 
 // Open loads an image from file
@@ -72,8 +63,7 @@ func Open(filename string) (image.Image, error) {
 		return nil, err
 	}
 	defer file.Close()
-	img, err := Decode(file)
-	return img, err
+	return Decode(file)
 }
 
 type encodeConfig struct {

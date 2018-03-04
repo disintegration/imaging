@@ -1,11 +1,27 @@
 package imaging
 
 import (
+	"image"
 	"runtime"
 	"testing"
 )
 
-func testParallelN(enabled bool, n, procs int) bool {
+var (
+	testdataBranchesJPG     = mustOpen("testdata/branches.jpg")
+	testdataBranchesPNG     = mustOpen("testdata/branches.png")
+	testdataFlowersPNG      = mustOpen("testdata/flowers.png")
+	testdataFlowersSmallPNG = mustOpen("testdata/flowers_small.png")
+)
+
+func mustOpen(filename string) image.Image {
+	img, err := Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	return img
+}
+
+func testParallelN(n, procs int) bool {
 	data := make([]bool, n)
 	before := runtime.GOMAXPROCS(0)
 	runtime.GOMAXPROCS(procs)
@@ -14,22 +30,20 @@ func testParallelN(enabled bool, n, procs int) bool {
 			data[i] = true
 		}
 	})
+	runtime.GOMAXPROCS(before)
 	for i := 0; i < n; i++ {
 		if !data[i] {
 			return false
 		}
 	}
-	runtime.GOMAXPROCS(before)
 	return true
 }
 
 func TestParallel(t *testing.T) {
-	for _, e := range []bool{true, false} {
-		for _, n := range []int{1, 10, 100, 1000} {
-			for _, p := range []int{1, 2, 4, 8, 16, 100} {
-				if !testParallelN(e, n, p) {
-					t.Errorf("test [parallel %v %d %d] failed", e, n, p)
-				}
+	for _, n := range []int{0, 1, 10, 100, 1000} {
+		for _, p := range []int{1, 2, 4, 8, 16, 100} {
+			if !testParallelN(n, p) {
+				t.Errorf("test [parallel %d %d] failed", n, p)
 			}
 		}
 	}

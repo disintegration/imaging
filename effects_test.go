@@ -89,15 +89,11 @@ func TestBlur(t *testing.T) {
 }
 
 func TestBlurGolden(t *testing.T) {
-	src, err := Open("testdata/lena_128.png")
-	if err != nil {
-		t.Errorf("Open: %v", err)
-	}
 	for name, sigma := range map[string]float64{
 		"out_blur_0.5.png": 0.5,
 		"out_blur_1.5.png": 1.5,
 	} {
-		got := Blur(src, sigma)
+		got := Blur(testdataFlowersSmallPNG, sigma)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Errorf("Open: %v", err)
@@ -109,14 +105,9 @@ func TestBlurGolden(t *testing.T) {
 }
 
 func BenchmarkBlur(b *testing.B) {
-	b.StopTimer()
-	img, err := Open("testdata/lena_512.png")
-	if err != nil {
-		b.Fatalf("Open: %v", err)
-	}
-	b.StartTimer()
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Blur(img, 3)
+		Blur(testdataBranchesJPG, 3)
 	}
 }
 
@@ -222,15 +213,11 @@ func TestSharpen(t *testing.T) {
 }
 
 func TestSharpenGolden(t *testing.T) {
-	src, err := Open("testdata/lena_128.png")
-	if err != nil {
-		t.Errorf("Open: %v", err)
-	}
 	for name, sigma := range map[string]float64{
 		"out_sharpen_0.5.png": 0.5,
 		"out_sharpen_1.5.png": 1.5,
 	} {
-		got := Sharpen(src, sigma)
+		got := Sharpen(testdataFlowersSmallPNG, sigma)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Errorf("Open: %v", err)
@@ -242,13 +229,8 @@ func TestSharpenGolden(t *testing.T) {
 }
 
 func BenchmarkSharpen(b *testing.B) {
-	b.StopTimer()
-	img, err := Open("testdata/lena_512.png")
-	if err != nil {
-		b.Fatalf("Open: %v", err)
-	}
-	b.StartTimer()
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		Sharpen(img, 3)
+		Sharpen(testdataBranchesJPG, 3)
 	}
 }

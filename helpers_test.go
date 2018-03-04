@@ -140,6 +140,13 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func BenchmarkNew(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		New(1024, 1024, color.White)
+	}
+}
+
 func TestFormats(t *testing.T) {
 	formatNames := map[Format]string{
 		JPEG:       "JPEG",

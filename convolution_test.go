@@ -233,15 +233,10 @@ func TestConvolve5x5(t *testing.T) {
 }
 
 func BenchmarkConvolve3x3(b *testing.B) {
-	b.StopTimer()
-	img, err := Open("testdata/lena_512.png")
-	if err != nil {
-		b.Fatalf("Open: %v", err)
-	}
-	b.StartTimer()
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		Convolve3x3(
-			img,
+			testdataBranchesJPG,
 			[9]float64{
 				-1, -1, 0,
 				-1, 0, 1,
@@ -253,15 +248,10 @@ func BenchmarkConvolve3x3(b *testing.B) {
 }
 
 func BenchmarkConvolve5x5(b *testing.B) {
-	b.StopTimer()
-	img, err := Open("testdata/lena_512.png")
-	if err != nil {
-		b.Fatalf("Open: %v", err)
-	}
-	b.StartTimer()
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		Convolve5x5(
-			img,
+			testdataBranchesJPG,
 			[25]float64{
 				-1, -1, -1, -1, 0,
 				-1, -1, -1, 0, 1,

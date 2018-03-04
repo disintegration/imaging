@@ -42,6 +42,13 @@ func TestCrop(t *testing.T) {
 	}
 }
 
+func BenchmarkCrop(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Crop(testdataBranchesJPG, image.Rect(100, 100, 300, 300))
+	}
+}
+
 func TestCropCenter(t *testing.T) {
 	td := []struct {
 		desc string
@@ -481,6 +488,13 @@ func TestPaste(t *testing.T) {
 	}
 }
 
+func BenchmarkPaste(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Paste(testdataBranchesJPG, testdataFlowersSmallPNG, image.Pt(100, 100))
+	}
+}
+
 func TestPasteCenter(t *testing.T) {
 	td := []struct {
 		desc string
@@ -601,6 +615,13 @@ func TestOverlay(t *testing.T) {
 		if !compareNRGBA(got, want, 0) {
 			t.Errorf("test [%s] failed: %#v", d.desc, got)
 		}
+	}
+}
+
+func BenchmarkOverlay(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Overlay(testdataBranchesJPG, testdataFlowersSmallPNG, image.Pt(100, 100), 0.5)
 	}
 }
 

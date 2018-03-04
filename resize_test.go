@@ -1,6 +1,7 @@
 package imaging
 
 import (
+	"fmt"
 	"image"
 	"testing"
 )
@@ -202,17 +203,13 @@ func TestResize(t *testing.T) {
 }
 
 func TestResizeGolden(t *testing.T) {
-	src, err := Open("testdata/lena_512.png")
-	if err != nil {
-		t.Errorf("Open: %v", err)
-	}
 	for name, filter := range map[string]ResampleFilter{
 		"out_resize_nearest.png": NearestNeighbor,
 		"out_resize_linear.png":  Linear,
 		"out_resize_catrom.png":  CatmullRom,
 		"out_resize_lanczos.png": Lanczos,
 	} {
-		got := Resize(src, 128, 0, filter)
+		got := Resize(testdataBranchesPNG, 150, 0, filter)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Errorf("Open: %v", err)
@@ -591,38 +588,45 @@ func TestThumbnail(t *testing.T) {
 	}
 }
 
-func BenchmarkResizeLanczosUp(b *testing.B) {
-	benchmarkResize(b, "testdata/lena_128.png", 512, Lanczos)
-}
+func BenchmarkResize(b *testing.B) {
+	for _, dir := range []string{"Down", "Up"} {
+		for _, filter := range []string{"NearestNeighbor", "Linear", "CatmullRom", "Lanczos"} {
+			for _, format := range []string{"JPEG", "PNG"} {
+				var size int
+				switch dir {
+				case "Down":
+					size = 100
+				case "Up":
+					size = 1000
+				}
 
-func BenchmarkResizeLinearUp(b *testing.B) {
-	benchmarkResize(b, "testdata/lena_128.png", 512, Linear)
-}
+				var f ResampleFilter
+				switch filter {
+				case "NearestNeighbor":
+					f = NearestNeighbor
+				case "Linear":
+					f = Linear
+				case "CatmullRom":
+					f = CatmullRom
+				case "Lanczos":
+					f = Lanczos
+				}
 
-func BenchmarkResizeNearestNeighborUp(b *testing.B) {
-	benchmarkResize(b, "testdata/lena_128.png", 512, NearestNeighbor)
-}
+				var img image.Image
+				switch format {
+				case "JPEG":
+					img = testdataBranchesJPG
+				case "PNG":
+					img = testdataBranchesPNG
+				}
 
-func BenchmarkResizeLanczosDown(b *testing.B) {
-	benchmarkResize(b, "testdata/lena_512.png", 128, Lanczos)
-}
-
-func BenchmarkResizeLinearDown(b *testing.B) {
-	benchmarkResize(b, "testdata/lena_512.png", 128, Linear)
-}
-
-func BenchmarkResizeNearestNeighborDown(b *testing.B) {
-	benchmarkResize(b, "testdata/lena_512.png", 128, NearestNeighbor)
-}
-
-func benchmarkResize(b *testing.B, filename string, size int, f ResampleFilter) {
-	b.StopTimer()
-	img, err := Open(filename)
-	if err != nil {
-		b.Fatalf("Open: %v", err)
-	}
-	b.StartTimer()
-	for i := 0; i < b.N; i++ {
-		Resize(img, size, size, f)
+				b.Run(fmt.Sprintf("%s %s %s", dir, filter, format), func(b *testing.B) {
+					b.ReportAllocs()
+					for i := 0; i < b.N; i++ {
+						Resize(img, size, size, f)
+					}
+				})
+			}
+		}
 	}
 }
