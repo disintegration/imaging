@@ -12,7 +12,7 @@ func Example() {
 	// Open a test image.
 	src, err := imaging.Open("testdata/flowers.png")
 	if err != nil {
-		log.Fatalf("Open failed: %v", err)
+		log.Fatalf("failed to open image: %v", err)
 	}
 
 	// Crop the original image to 300x300px size using the center anchor.
@@ -53,6 +53,6 @@ func Example() {
 	// Save the resulting image as JPEG.
 	err = imaging.Save(dst, "testdata/out_example.jpg")
 	if err != nil {
-		log.Fatalf("Save failed: %v", err)
+		log.Fatalf("failed to save image: %v", err)
 	}
 }

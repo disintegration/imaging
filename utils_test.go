@@ -9,7 +9,6 @@ import (
 var (
 	testdataBranchesJPG     = mustOpen("testdata/branches.jpg")
 	testdataBranchesPNG     = mustOpen("testdata/branches.png")
-	testdataFlowersPNG      = mustOpen("testdata/flowers.png")
 	testdataFlowersSmallPNG = mustOpen("testdata/flowers_small.png")
 )
 
@@ -21,12 +20,22 @@ func mustOpen(filename string) image.Image {
 	return img
 }
 
+func TestParallel(t *testing.T) {
+	for _, n := range []int{0, 1, 10, 100, 1000} {
+		for _, p := range []int{1, 2, 4, 8, 16, 100} {
+			if !testParallelN(n, p) {
+				t.Fatalf("test [parallel %d %d] failed", n, p)
+			}
+		}
+	}
+}
+
 func testParallelN(n, procs int) bool {
 	data := make([]bool, n)
 	before := runtime.GOMAXPROCS(0)
 	runtime.GOMAXPROCS(procs)
-	parallel(n, func(start, end int) {
-		for i := start; i < end; i++ {
+	parallel(0, n, func(is <-chan int) {
+		for i := range is {
 			data[i] = true
 		}
 	})
@@ -39,18 +48,8 @@ func testParallelN(n, procs int) bool {
 	return true
 }
 
-func TestParallel(t *testing.T) {
-	for _, n := range []int{0, 1, 10, 100, 1000} {
-		for _, p := range []int{1, 2, 4, 8, 16, 100} {
-			if !testParallelN(n, p) {
-				t.Errorf("test [parallel %d %d] failed", n, p)
-			}
-		}
-	}
-}
-
 func TestClamp(t *testing.T) {
-	td := []struct {
+	testCases := []struct {
 		f float64
 		u uint8
 	}{
@@ -67,9 +66,61 @@ func TestClamp(t *testing.T) {
 		{127.6, 128},
 	}
 
-	for _, d := range td {
-		if clamp(d.f) != d.u {
-			t.Errorf("test [clamp %v %v] failed: %v", d.f, d.u, clamp(d.f))
+	for _, tc := range testCases {
+		if clamp(tc.f) != tc.u {
+			t.Fatalf("test [clamp %v %v] failed: %v", tc.f, tc.u, clamp(tc.f))
 		}
 	}
+}
+
+func TestReverse(t *testing.T) {
+	testCases := []struct {
+		pix  []uint8
+		want []uint8
+	}{
+		{
+			pix:  []uint8{},
+			want: []uint8{},
+		},
+		{
+			pix:  []uint8{1, 2, 3, 4},
+			want: []uint8{1, 2, 3, 4},
+		},
+		{
+			pix:  []uint8{1, 2, 3, 4, 5, 6, 7, 8},
+			want: []uint8{5, 6, 7, 8, 1, 2, 3, 4},
+		},
+		{
+			pix:  []uint8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
+			want: []uint8{9, 10, 11, 12, 5, 6, 7, 8, 1, 2, 3, 4},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			reverse(tc.pix)
+			if !compareBytes(tc.pix, tc.want, 0) {
+				t.Fatalf("got pix %v want %v", tc.pix, tc.want)
+			}
+		})
+	}
+}
+
+func compareNRGBA(img1, img2 *image.NRGBA, delta int) bool {
+	if !img1.Rect.Eq(img2.Rect) {
+		return false
+	}
+	return compareBytes(img1.Pix, img2.Pix, delta)
+}
+
+func compareBytes(a, b []uint8, delta int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		if absint(int(a[i])-int(b[i])) > delta {
+			return false
+		}
+	}
+	return true
 }

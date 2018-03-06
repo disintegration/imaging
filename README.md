@@ -4,15 +4,12 @@
 [![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
 [![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master)](https://coveralls.io/github/disintegration/imaging?branch=master)
 
-Package imaging provides basic image manipulation functions (resize, rotate, flip, crop, etc.). 
+Package imaging provides basic imaging processing functions (resize, rotate, crop, brightness/contrast adjustments, etc.).
 
-Image manipulation functions provided by the package take any image type 
-that implements `image.Image` interface as an input, and return a new image of 
-`*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
+All the image processing functions provided by the package accept any image type that implements `image.Image` interface
+as an input, and return a new image of `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
 
 ## Installation
-
-Imaging requires Go version 1.2 or greater.
 
     go get -u github.com/disintegration/imaging
     
@@ -45,15 +42,15 @@ Imaging supports image resizing using various resampling filters. The most notab
 - `Box` - Simple and fast averaging filter appropriate for downscaling. When upscaling it's similar to NearestNeighbor.
 - `Linear` - Bilinear filter, smooth and reasonably fast.
 - `MitchellNetravali` - А smooth bicubic filter.
-- `CatmullRom` - A sharp bicubic filter. 
+- `CatmullRom` - A sharp bicubic filter.
 - `Gaussian` - Blurring filter that uses gaussian function, useful for noise removal.
-- `Lanczos` - High-quality resampling filter for photographic images yielding sharp results, but it's slower than cubic filters.
+- `Lanczos` - High-quality resampling filter for photographic images yielding sharp results, slower than cubic filters.
 
 The full list of supported filters:  NearestNeighbor, Box, Linear, Hermite, MitchellNetravali, CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine. Custom filters can be created using ResampleFilter struct.
 
 **Resampling filters comparison**
 
-The original image.
+Original image:
 
 ![srcImage](testdata/branches.png)
 
@@ -139,7 +136,7 @@ func main() {
 	// Open a test image.
 	src, err := imaging.Open("testdata/flowers.png")
 	if err != nil {
-		log.Fatalf("Open failed: %v", err)
+		log.Fatalf("failed to open image: %v", err)
 	}
 
 	// Crop the original image to 300x300px size using the center anchor.
@@ -180,7 +177,7 @@ func main() {
 	// Save the resulting image as JPEG.
 	err = imaging.Save(dst, "testdata/out_example.jpg")
 	if err != nil {
-		log.Fatalf("Save failed: %v", err)
+		log.Fatalf("failed to save image: %v", err)
 	}
 }
 ```

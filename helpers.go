@@ -50,6 +50,18 @@ var (
 	ErrUnsupportedFormat = errors.New("imaging: unsupported image format")
 )
 
+type fileSystem interface {
+	Create(string) (io.WriteCloser, error)
+	Open(string) (io.ReadCloser, error)
+}
+
+type localFS struct{}
+
+func (localFS) Create(name string) (io.WriteCloser, error) { return os.Create(name) }
+func (localFS) Open(name string) (io.ReadCloser, error)    { return os.Open(name) }
+
+var fs fileSystem = localFS{}
+
 // Decode reads an image from r.
 func Decode(r io.Reader) (image.Image, error) {
 	img, _, err := image.Decode(r)
@@ -58,7 +70,7 @@ func Decode(r io.Reader) (image.Image, error) {
 
 // Open loads an image from file
 func Open(filename string) (image.Image, error) {
-	file, err := os.Open(filename)
+	file, err := fs.Open(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -153,11 +165,17 @@ func Save(img image.Image, filename string, opts ...EncodeOption) (err error) {
 		return ErrUnsupportedFormat
 	}
 
-	file, err := os.Create(filename)
+	file, err := fs.Create(filename)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+
+	defer func() {
+		cerr := file.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
 
 	return Encode(file, img, f, opts...)
 }
@@ -175,16 +193,38 @@ func New(width, height int, fillColor color.Color) *image.NRGBA {
 		return dst
 	}
 
-	cs := []uint8{c.R, c.G, c.B, c.A}
-
-	// fill the first row
+	// Fill the first row.
+	i := 0
 	for x := 0; x < width; x++ {
-		copy(dst.Pix[x*4:(x+1)*4], cs)
-	}
-	// copy the first row to other rows
-	for y := 1; y < height; y++ {
-		copy(dst.Pix[y*dst.Stride:y*dst.Stride+width*4], dst.Pix[0:width*4])
+		dst.Pix[i+0] = c.R
+		dst.Pix[i+1] = c.G
+		dst.Pix[i+2] = c.B
+		dst.Pix[i+3] = c.A
+		i += 4
 	}
 
+	// Copy the first row to other rows.
+	size := width * 4
+	parallel(1, height, func(ys <-chan int) {
+		for y := range ys {
+			i = y * dst.Stride
+			copy(dst.Pix[i:i+size], dst.Pix[0:size])
+		}
+	})
+
+	return dst
+}
+
+// Clone returns a copy of the given image.
+func Clone(img image.Image) *image.NRGBA {
+	src := newScanner(img)
+	dst := image.NewNRGBA(image.Rect(0, 0, src.w, src.h))
+	size := src.w * 4
+	parallel(0, src.h, func(ys <-chan int) {
+		for y := range ys {
+			i := y * dst.Stride
+			src.scan(0, y, src.w, y+1, dst.Pix[i:i+size])
+		}
+	})
 	return dst
 }

@@ -2,42 +2,52 @@ package imaging
 
 import (
 	"image"
-	"image/color"
 	"testing"
 )
 
 func TestHistogram(t *testing.T) {
-	b := image.Rectangle{image.Point{0, 0}, image.Point{2, 2}}
-
-	i1 := image.NewRGBA(b)
-	i1.Set(0, 0, image.Black)
-	i1.Set(1, 0, image.White)
-	i1.Set(1, 1, image.White)
-	i1.Set(0, 1, color.Gray{123})
-
-	h := Histogram(i1)
-	if h[0] != 0.25 || h[123] != 0.25 || h[255] != 0.5 {
-		t.Errorf("Incorrect histogram for image i1")
+	testCases := []struct {
+		name string
+		img  image.Image
+		want [256]float64
+	}{
+		{
+			name: "grayscale",
+			img: &image.RGBA{
+				Rect:   image.Rect(-1, -1, 1, 1),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff,
+					0xff, 0xff, 0xff, 0xff, 0x80, 0x80, 0x80, 0xff,
+				},
+			},
+			want: [256]float64{0x00: 0.25, 0x80: 0.25, 0xff: 0.5},
+		},
+		{
+			name: "colorful",
+			img: &image.RGBA{
+				Rect:   image.Rect(-1, -1, 1, 1),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x00, 0x00, 0x00, 0xff, 0x33, 0x44, 0x55, 0xff,
+					0x55, 0x44, 0x33, 0xff, 0x77, 0x66, 0x55, 0xff,
+				},
+			},
+			want: [256]float64{0x00: 0.25, 0x41: 0.25, 0x47: 0.25, 0x69: 0.25},
+		},
+		{
+			name: "zero",
+			img:  &image.RGBA{},
+			want: [256]float64{},
+		},
 	}
-
-	i2 := image.NewRGBA(b)
-	i2.Set(0, 0, color.Gray{51})
-	i2.Set(0, 1, color.Gray{14})
-	i2.Set(1, 0, color.Gray{14})
-
-	h = Histogram(i2)
-	if h[14] != 0.5 || h[51] != 0.25 || h[0] != 0.25 {
-		t.Errorf("Incorrect histogram for image i2")
-	}
-
-	b = image.Rectangle{image.Point{0, 0}, image.Point{0, 0}}
-	i3 := image.NewRGBA(b)
-	h = Histogram(i3)
-	for _, val := range h {
-		if val != 0 {
-			t.Errorf("Histogram for an empty image should be a zero histogram.")
-			return
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := Histogram(tc.img)
+			if got != tc.want {
+				t.Fatalf("got histogram %#v want %#v", got, tc.want)
+			}
+		})
 	}
 }
 
