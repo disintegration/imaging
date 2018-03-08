@@ -5,6 +5,8 @@ import (
 	"errors"
 	"image"
 	"image/color"
+	"image/color/palette"
+	"image/draw"
 	"io"
 	"io/ioutil"
 	"os"
@@ -39,6 +41,23 @@ func (badFile) Close() error {
 	return errClose
 }
 
+type quantizer struct {
+	palette []color.Color
+}
+
+func (q quantizer) Quantize(p color.Palette, m image.Image) color.Palette {
+	pal := make([]color.Color, len(p), cap(p))
+	copy(pal, p)
+	n := cap(p) - len(p)
+	if n > len(q.palette) {
+		n = len(q.palette)
+	}
+	for i := 0; i < n; i++ {
+		pal = append(pal, q.palette[i])
+	}
+	return pal
+}
+
 func TestOpenSave(t *testing.T) {
 	imgWithoutAlpha := image.NewNRGBA(image.Rect(0, 0, 4, 6))
 	imgWithoutAlpha.Pix = []uint8{
@@ -59,8 +78,16 @@ func TestOpenSave(t *testing.T) {
 		0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x88, 0x88, 0x88, 0x00, 0x88, 0x88, 0x88, 0x00,
 	}
 
-	options := []EncodeOption{
-		JPEGQuality(100),
+	options := [][]EncodeOption{
+		{
+			JPEGQuality(100),
+		},
+		{
+			JPEGQuality(99),
+			GIFDrawer(draw.FloydSteinberg),
+			GIFNumColors(256),
+			GIFQuantizer(quantizer{palette.Plan9}),
+		},
 	}
 
 	dir, err := ioutil.TempDir("", "imaging")
@@ -77,24 +104,26 @@ func TestOpenSave(t *testing.T) {
 			img = imgWithAlpha
 		}
 
-		err := Save(img, filename, options...)
-		if err != nil {
-			t.Fatalf("failed to save image (%q): %v", filename, err)
-		}
+		for _, opts := range options {
+			err := Save(img, filename, opts...)
+			if err != nil {
+				t.Fatalf("failed to save image (%q): %v", filename, err)
+			}
 
-		img2, err := Open(filename)
-		if err != nil {
-			t.Fatalf("failed to open image (%q): %v", filename, err)
-		}
-		got := Clone(img2)
+			img2, err := Open(filename)
+			if err != nil {
+				t.Fatalf("failed to open image (%q): %v", filename, err)
+			}
+			got := Clone(img2)
 
-		delta := 0
-		if ext == "jpg" || ext == "jpeg" || ext == "gif" {
-			delta = 3
-		}
+			delta := 0
+			if ext == "jpg" || ext == "jpeg" || ext == "gif" {
+				delta = 3
+			}
 
-		if !compareNRGBA(got, img, delta) {
-			t.Fatalf("bad encode-decode result (ext=%q): got %#v want %#v", ext, got, img)
+			if !compareNRGBA(got, img, delta) {
+				t.Fatalf("bad encode-decode result (ext=%q): got %#v want %#v", ext, got, img)
+			}
 		}
 	}
 

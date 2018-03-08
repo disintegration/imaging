@@ -4,6 +4,7 @@ import (
 	"errors"
 	"image"
 	"image/color"
+	"image/draw"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -79,11 +80,17 @@ func Open(filename string) (image.Image, error) {
 }
 
 type encodeConfig struct {
-	jpegQuality int
+	jpegQuality  int
+	gifNumColors int
+	gifQuantizer draw.Quantizer
+	gifDrawer    draw.Drawer
 }
 
 var defaultEncodeConfig = encodeConfig{
-	jpegQuality: 95,
+	jpegQuality:  95,
+	gifNumColors: 256,
+	gifQuantizer: nil,
+	gifDrawer:    nil,
 }
 
 // EncodeOption sets an optional parameter for the Encode and Save functions.
@@ -94,6 +101,30 @@ type EncodeOption func(*encodeConfig)
 func JPEGQuality(quality int) EncodeOption {
 	return func(c *encodeConfig) {
 		c.jpegQuality = quality
+	}
+}
+
+// GIFNumColors returns an EncodeOption that sets the maximum number of colors
+// used in the GIF-encoded image. It ranges from 1 to 256.  Default is 256.
+func GIFNumColors(numColors int) EncodeOption {
+	return func(c *encodeConfig) {
+		c.gifNumColors = numColors
+	}
+}
+
+// GIFQuantizer returns an EncodeOption that sets the quantizer that is used to produce
+// a palette of the GIF-encoded image.
+func GIFQuantizer(quantizer draw.Quantizer) EncodeOption {
+	return func(c *encodeConfig) {
+		c.gifQuantizer = quantizer
+	}
+}
+
+// GIFDrawer returns an EncodeOption that sets the drawer that is used to convert
+// the source image to the desired palette of the GIF-encoded image.
+func GIFDrawer(drawer draw.Drawer) EncodeOption {
+	return func(c *encodeConfig) {
+		c.gifDrawer = drawer
 	}
 }
 
@@ -126,7 +157,11 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 	case PNG:
 		err = png.Encode(w, img)
 	case GIF:
-		err = gif.Encode(w, img, &gif.Options{NumColors: 256})
+		err = gif.Encode(w, img, &gif.Options{
+			NumColors: cfg.gifNumColors,
+			Quantizer: cfg.gifQuantizer,
+			Drawer:    cfg.gifDrawer,
+		})
 	case TIFF:
 		err = tiff.Encode(w, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
 	case BMP:
