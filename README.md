@@ -2,9 +2,10 @@
 
 [![GoDoc](https://godoc.org/github.com/disintegration/imaging?status.svg)](https://godoc.org/github.com/disintegration/imaging)
 [![Build Status](https://travis-ci.org/disintegration/imaging.svg?branch=master)](https://travis-ci.org/disintegration/imaging)
-[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master)](https://coveralls.io/github/disintegration/imaging?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/disintegration/imaging/badge.svg?branch=master&service=github)](https://coveralls.io/github/disintegration/imaging?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/disintegration/imaging)](https://goreportcard.com/report/github.com/disintegration/imaging)
 
-Package imaging provides basic imaging processing functions (resize, rotate, crop, brightness/contrast adjustments, etc.).
+Package imaging provides basic image processing functions (resize, rotate, crop, brightness/contrast adjustments, etc.).
 
 All the image processing functions provided by the package accept any image type that implements `image.Image` interface
 as an input, and return a new image of `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).

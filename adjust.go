@@ -51,7 +51,7 @@ func Invert(img image.Image) *image.NRGBA {
 
 // AdjustContrast changes the contrast of the image using the percentage parameter and returns the adjusted image.
 // The percentage must be in range (-100, 100). The percentage = 0 gives the original image.
-// The percentage = -100 gives solid grey image.
+// The percentage = -100 gives solid gray image.
 //
 // Examples:
 //
