@@ -178,18 +178,15 @@ func resizeNearest(img image.Image, width, height int) *image.NRGBA {
 	dx := float64(img.Bounds().Dx()) / float64(width)
 	dy := float64(img.Bounds().Dy()) / float64(height)
 
-	if height < img.Bounds().Dy() {
+	if dx > 1 && dy > 1 {
 		src := newScanner(img)
 		parallel(0, height, func(ys <-chan int) {
-			scanLine := make([]uint8, src.w*4)
 			for y := range ys {
 				srcY := int((float64(y) + 0.5) * dy)
-				src.scan(0, srcY, src.w, srcY+1, scanLine)
 				dstOff := y * dst.Stride
 				for x := 0; x < width; x++ {
 					srcX := int((float64(x) + 0.5) * dx)
-					srcOff := srcX * 4
-					copy(dst.Pix[dstOff:dstOff+4], scanLine[srcOff:srcOff+4])
+					src.scan(srcX, srcY, srcX+1, srcY+1, dst.Pix[dstOff:dstOff+4])
 					dstOff += 4
 				}
 			}
