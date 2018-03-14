@@ -80,17 +80,19 @@ func Open(filename string) (image.Image, error) {
 }
 
 type encodeConfig struct {
-	jpegQuality  int
-	gifNumColors int
-	gifQuantizer draw.Quantizer
-	gifDrawer    draw.Drawer
+	jpegQuality         int
+	gifNumColors        int
+	gifQuantizer        draw.Quantizer
+	gifDrawer           draw.Drawer
+	pngCompressionLevel png.CompressionLevel
 }
 
 var defaultEncodeConfig = encodeConfig{
-	jpegQuality:  95,
-	gifNumColors: 256,
-	gifQuantizer: nil,
-	gifDrawer:    nil,
+	jpegQuality:         95,
+	gifNumColors:        256,
+	gifQuantizer:        nil,
+	gifDrawer:           nil,
+	pngCompressionLevel: png.DefaultCompression,
 }
 
 // EncodeOption sets an optional parameter for the Encode and Save functions.
@@ -128,6 +130,14 @@ func GIFDrawer(drawer draw.Drawer) EncodeOption {
 	}
 }
 
+// PNGCompressionLevel returns an EncodeOption that sets the compression level
+// of the PNG-encoded image. Default is png.DefaultCompression.
+func PNGCompressionLevel(level png.CompressionLevel) EncodeOption {
+	return func(c *encodeConfig) {
+		c.pngCompressionLevel = level
+	}
+}
+
 // Encode writes the image img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP).
 func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) error {
 	cfg := defaultEncodeConfig
@@ -155,17 +165,22 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 		}
 
 	case PNG:
-		err = png.Encode(w, img)
+		enc := png.Encoder{CompressionLevel: cfg.pngCompressionLevel}
+		err = enc.Encode(w, img)
+
 	case GIF:
 		err = gif.Encode(w, img, &gif.Options{
 			NumColors: cfg.gifNumColors,
 			Quantizer: cfg.gifQuantizer,
 			Drawer:    cfg.gifDrawer,
 		})
+
 	case TIFF:
 		err = tiff.Encode(w, img, &tiff.Options{Compression: tiff.Deflate, Predictor: true})
+
 	case BMP:
 		err = bmp.Encode(w, img)
+
 	default:
 		err = ErrUnsupportedFormat
 	}

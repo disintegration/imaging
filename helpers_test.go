@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/color/palette"
 	"image/draw"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"os"
@@ -87,6 +88,7 @@ func TestOpenSave(t *testing.T) {
 			GIFDrawer(draw.FloydSteinberg),
 			GIFNumColors(256),
 			GIFQuantizer(quantizer{palette.Plan9}),
+			PNGCompressionLevel(png.BestSpeed),
 		},
 	}
 
