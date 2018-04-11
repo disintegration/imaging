@@ -199,22 +199,10 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 //	err := imaging.Save(img, "out.jpg", imaging.JPEGQuality(80))
 //
 func Save(img image.Image, filename string, opts ...EncodeOption) (err error) {
-	formats := map[string]Format{
-		".jpg":  JPEG,
-		".jpeg": JPEG,
-		".png":  PNG,
-		".tif":  TIFF,
-		".tiff": TIFF,
-		".bmp":  BMP,
-		".gif":  GIF,
+	f, err := FormatFromFilename(filename)
+	if err != nil {
+		return err
 	}
-
-	ext := strings.ToLower(filepath.Ext(filename))
-	f, ok := formats[ext]
-	if !ok {
-		return ErrUnsupportedFormat
-	}
-
 	file, err := fs.Create(filename)
 	if err != nil {
 		return err
@@ -277,4 +265,24 @@ func Clone(img image.Image) *image.NRGBA {
 		}
 	})
 	return dst
+}
+
+//FormatFromFilename parses image format from filename extension: "jpg" (or "jpeg"), "png", "gif", "tif" (or "tiff") and "bmp" are supported.
+func FormatFromFilename(filename string) (Format, error) {
+	formats := map[string]Format{
+		".jpg":  JPEG,
+		".jpeg": JPEG,
+		".png":  PNG,
+		".tif":  TIFF,
+		".tiff": TIFF,
+		".bmp":  BMP,
+		".gif":  GIF,
+	}
+
+	ext := strings.ToLower(filepath.Ext(filename))
+	f, ok := formats[ext]
+	if !ok {
+		return -1, ErrUnsupportedFormat
+	}
+	return f, nil
 }
