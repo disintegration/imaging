@@ -46,6 +46,26 @@ func (f Format) String() string {
 	}
 }
 
+var formatFromExt = map[string]Format{
+	".jpg":  JPEG,
+	".jpeg": JPEG,
+	".png":  PNG,
+	".tif":  TIFF,
+	".tiff": TIFF,
+	".bmp":  BMP,
+	".gif":  GIF,
+}
+
+// FormatFromFilename parses image format from filename extension:
+// "jpg" (or "jpeg"), "png", "gif", "tif" (or "tiff") and "bmp" are supported.
+func FormatFromFilename(filename string) (Format, error) {
+	ext := strings.ToLower(filepath.Ext(filename))
+	if f, ok := formatFromExt[ext]; ok {
+		return f, nil
+	}
+	return -1, ErrUnsupportedFormat
+}
+
 var (
 	// ErrUnsupportedFormat means the given image format (or file extension) is unsupported.
 	ErrUnsupportedFormat = errors.New("imaging: unsupported image format")
@@ -265,24 +285,4 @@ func Clone(img image.Image) *image.NRGBA {
 		}
 	})
 	return dst
-}
-
-//FormatFromFilename parses image format from filename extension: "jpg" (or "jpeg"), "png", "gif", "tif" (or "tiff") and "bmp" are supported.
-func FormatFromFilename(filename string) (Format, error) {
-	formats := map[string]Format{
-		".jpg":  JPEG,
-		".jpeg": JPEG,
-		".png":  PNG,
-		".tif":  TIFF,
-		".tiff": TIFF,
-		".bmp":  BMP,
-		".gif":  GIF,
-	}
-
-	ext := strings.ToLower(filepath.Ext(filename))
-	f, ok := formats[ext]
-	if !ok {
-		return -1, ErrUnsupportedFormat
-	}
-	return f, nil
 }
