@@ -1,6 +1,7 @@
 package imaging
 
 import (
+	"bytes"
 	"errors"
 	"image"
 	"image/color"
@@ -244,33 +245,16 @@ func New(width, height int, fillColor color.Color) *image.NRGBA {
 		return &image.NRGBA{}
 	}
 
-	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
 	c := color.NRGBAModel.Convert(fillColor).(color.NRGBA)
-
-	if c.R == 0 && c.G == 0 && c.B == 0 && c.A == 0 {
-		return dst
+	if (c == color.NRGBA{0, 0, 0, 0}) {
+		return image.NewNRGBA(image.Rect(0, 0, width, height))
 	}
 
-	// Fill the first row.
-	i := 0
-	for x := 0; x < width; x++ {
-		dst.Pix[i+0] = c.R
-		dst.Pix[i+1] = c.G
-		dst.Pix[i+2] = c.B
-		dst.Pix[i+3] = c.A
-		i += 4
+	return &image.NRGBA{
+		Pix:    bytes.Repeat([]byte{c.R, c.G, c.B, c.A}, width*height),
+		Stride: 4 * width,
+		Rect:   image.Rect(0, 0, width, height),
 	}
-
-	// Copy the first row to other rows.
-	size := width * 4
-	parallel(1, height, func(ys <-chan int) {
-		for y := range ys {
-			i = y * dst.Stride
-			copy(dst.Pix[i:i+size], dst.Pix[0:size])
-		}
-	})
-
-	return dst
 }
 
 // Clone returns a copy of the given image.

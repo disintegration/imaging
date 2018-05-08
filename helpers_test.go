@@ -181,23 +181,23 @@ func TestNew(t *testing.T) {
 		dstPix    []uint8
 	}{
 		{
-			"New 1x1 black",
+			"New 1x1 transparent",
 			1, 1,
-			color.NRGBA{0, 0, 0, 0},
+			color.Transparent,
 			image.Rect(0, 0, 1, 1),
 			[]uint8{0x00, 0x00, 0x00, 0x00},
 		},
 		{
 			"New 1x2 red",
 			1, 2,
-			color.NRGBA{255, 0, 0, 255},
+			color.RGBA{255, 0, 0, 255},
 			image.Rect(0, 0, 1, 2),
 			[]uint8{0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff},
 		},
 		{
 			"New 2x1 white",
 			2, 1,
-			color.NRGBA{255, 255, 255, 255},
+			color.White,
 			image.Rect(0, 0, 2, 1),
 			[]uint8{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
 		},
@@ -215,9 +215,16 @@ func TestNew(t *testing.T) {
 		{
 			"New 0x0 white",
 			0, 0,
-			color.NRGBA{255, 255, 255, 255},
+			color.White,
 			image.Rect(0, 0, 0, 0),
 			nil,
+		},
+		{
+			"New 800x600 custom",
+			800, 600,
+			color.NRGBA{1, 2, 3, 4},
+			image.Rect(0, 0, 800, 600),
+			bytes.Repeat([]byte{1, 2, 3, 4}, 800*600),
 		},
 	}
 
