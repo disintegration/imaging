@@ -71,7 +71,7 @@ func blurHorizontal(img image.Image, kernel []float64) *image.NRGBA {
 					b /= a
 				}
 
-				scanLine[idx] = clamp(r)
+				scanLine[idx+0] = clamp(r)
 				scanLine[idx+1] = clamp(g)
 				scanLine[idx+2] = clamp(b)
 				scanLine[idx+3] = clamp(a / wsum)
@@ -96,7 +96,7 @@ func blurVertical(img image.Image, kernel []float64) *image.NRGBA {
 			for i, v := range scanLine {
 				scanLineF[i] = float64(v)
 			}
-			for y, idx := 0, 0; y < src.h; y, idx = y+1, idx+4 {
+			for y := 0; y < src.h; y++ {
 				min := y - radius
 				if min < 0 {
 					min = 0
@@ -111,11 +111,10 @@ func blurVertical(img image.Image, kernel []float64) *image.NRGBA {
 					i := iy * 4
 					weight := kernel[absint(y-iy)]
 					wsum += weight
-					v := scanLineF[i : i+4]
-					wa := v[3] * weight
-					r += v[0] * wa
-					g += v[1] * wa
-					b += v[2] * wa
+					wa := scanLineF[i+3] * weight
+					r += scanLineF[i+0] * wa
+					g += scanLineF[i+1] * wa
+					b += scanLineF[i+2] * wa
 					a += wa
 				}
 				if a != 0 {
