@@ -90,6 +90,12 @@ func Decode(r io.Reader) (image.Image, error) {
 	return img, err
 }
 
+// DecodeWithFormat reads an image from r and returns the format of the image: jpeg, png, giff.
+// It sniffs the header of the image contents to get the type. FormatFromFilename is an alternative that obtains the format based on the file extension.
+func DecodeWithFormat(r io.Reader) (image.Image, string, error) {
+	return image.Decode(r)
+}
+
 // Open loads an image from file
 func Open(filename string) (image.Image, error) {
 	file, err := fs.Open(filename)
