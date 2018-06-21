@@ -147,6 +147,12 @@ func TestOpenSave(t *testing.T) {
 		t.Fatalf("decoding bad data: expected error got nil")
 	}
 
+	buf = bytes.NewBuffer([]byte("bad data"))
+	_, _, err = DecodeWithFormat(buf)
+	if err == nil {
+		t.Fatalf("decoding bad data: expected error got nil")
+	}
+
 	err = Save(imgWithAlpha, filepath.Join(dir, "test.unknown"))
 	if err != ErrUnsupportedFormat {
 		t.Fatalf("got %v want ErrUnsupportedFormat", err)
