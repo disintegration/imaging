@@ -502,3 +502,46 @@ func TestClone(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatFromExtension(t *testing.T) {
+	testCases := []struct {
+		name string
+		ext  string
+		want Format
+		err  error
+	}{
+		{
+			name: "jpg without leading dot",
+			ext:  "jpg",
+			want: JPEG,
+		},
+		{
+			name: "jpg with leading dot",
+			ext:  ".jpg",
+			want: JPEG,
+		},
+		{
+			name: "jpg uppercase",
+			ext:  ".JPG",
+			want: JPEG,
+		},
+		{
+			name: "unsupported",
+			ext:  ".unsupportedextension",
+			want: -1,
+			err:  ErrUnsupportedFormat,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := FormatFromExtension(tc.ext)
+			if err != tc.err {
+				t.Errorf("got error %#v want %#v", err, tc.err)
+			}
+			if got != tc.want {
+				t.Errorf("got result %#v want %#v", got, tc.want)
+			}
+		})
+	}
+}
