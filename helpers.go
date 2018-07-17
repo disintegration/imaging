@@ -48,19 +48,19 @@ func (f Format) String() string {
 }
 
 var formatFromExt = map[string]Format{
-	".jpg":  JPEG,
-	".jpeg": JPEG,
-	".png":  PNG,
-	".tif":  TIFF,
-	".tiff": TIFF,
-	".bmp":  BMP,
-	".gif":  GIF,
+	"jpg":  JPEG,
+	"jpeg": JPEG,
+	"png":  PNG,
+	"tif":  TIFF,
+	"tiff": TIFF,
+	"bmp":  BMP,
+	"gif":  GIF,
 }
 
 // FormatFromExtension parses image format from extension:
 // "jpg" (or "jpeg"), "png", "gif", "tif" (or "tiff") and "bmp" are supported.
 func FormatFromExtension(ext string) (Format, error) {
-	if f, ok := formatFromExt["."+strings.ToLower(strings.TrimPrefix(ext, "."))]; ok {
+	if f, ok := formatFromExt[strings.ToLower(strings.TrimPrefix(ext, "."))]; ok {
 		return f, nil
 	}
 	return -1, ErrUnsupportedFormat
