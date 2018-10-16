@@ -160,19 +160,27 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		x2 += img.Rect.Min.X
 		y1 += img.Rect.Min.Y
 		y2 += img.Rect.Min.Y
+
+		hy := img.Rect.Min.Y / 2
+		hx := img.Rect.Min.X / 2
 		for y := y1; y < y2; y++ {
 			iy := (y-img.Rect.Min.Y)*img.YStride + (x1 - img.Rect.Min.X)
+
+			var yBase int
+			switch img.SubsampleRatio {
+			case image.YCbCrSubsampleRatio444, image.YCbCrSubsampleRatio422:
+				yBase = (y - img.Rect.Min.Y) * img.CStride
+			case image.YCbCrSubsampleRatio420, image.YCbCrSubsampleRatio440:
+				yBase = (y/2 - hy) * img.CStride
+			}
+
 			for x := x1; x < x2; x++ {
 				var ic int
 				switch img.SubsampleRatio {
-				case image.YCbCrSubsampleRatio444:
-					ic = (y-img.Rect.Min.Y)*img.CStride + (x - img.Rect.Min.X)
-				case image.YCbCrSubsampleRatio422:
-					ic = (y-img.Rect.Min.Y)*img.CStride + (x/2 - img.Rect.Min.X/2)
-				case image.YCbCrSubsampleRatio420:
-					ic = (y/2-img.Rect.Min.Y/2)*img.CStride + (x/2 - img.Rect.Min.X/2)
-				case image.YCbCrSubsampleRatio440:
-					ic = (y/2-img.Rect.Min.Y/2)*img.CStride + (x - img.Rect.Min.X)
+				case image.YCbCrSubsampleRatio444, image.YCbCrSubsampleRatio440:
+					ic = yBase + (x - img.Rect.Min.X)
+				case image.YCbCrSubsampleRatio422, image.YCbCrSubsampleRatio420:
+					ic = yBase + (x/2 - hx)
 				default:
 					ic = img.COffset(x, y)
 				}
