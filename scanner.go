@@ -60,19 +60,22 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1*4
 			for x := x1; x < x2; x++ {
-				s := img.Pix[i : i+4 : i+4]
 				d := dst[j : j+4 : j+4]
-				a := s[3]
+				a := img.Pix[i+3]
 				switch a {
 				case 0:
 					d[0] = 0
 					d[1] = 0
 					d[2] = 0
+					d[3] = a
 				case 0xff:
+					s := img.Pix[i : i+4 : i+4]
 					d[0] = s[0]
 					d[1] = s[1]
 					d[2] = s[2]
+					d[3] = a
 				default:
+					s := img.Pix[i : i+4 : i+4]
 					r16 := uint16(s[0])
 					g16 := uint16(s[1])
 					b16 := uint16(s[2])
@@ -80,8 +83,8 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 					d[0] = uint8(r16 * 0xff / a16)
 					d[1] = uint8(g16 * 0xff / a16)
 					d[2] = uint8(b16 * 0xff / a16)
+					d[3] = a
 				}
-				d[3] = a
 				j += 4
 				i += 4
 			}
