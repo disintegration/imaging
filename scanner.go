@@ -33,10 +33,23 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		size := (x2 - x1) * 4
 		j := 0
 		i := y1*img.Stride + x1*4
-		for y := y1; y < y2; y++ {
-			copy(dst[j:j+size], img.Pix[i:i+size])
-			j += size
-			i += img.Stride
+		if size == 4 {
+			for y := y1; y < y2; y++ {
+				d := dst[j : j+4 : j+4]
+				s := img.Pix[i : i+4 : i+4]
+				d[0] = s[0]
+				d[1] = s[1]
+				d[2] = s[2]
+				d[3] = s[3]
+				j += size
+				i += img.Stride
+			}
+		} else {
+			for y := y1; y < y2; y++ {
+				copy(dst[j:j+size], img.Pix[i:i+size])
+				j += size
+				i += img.Stride
+			}
 		}
 
 	case *image.NRGBA64:
