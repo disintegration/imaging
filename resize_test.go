@@ -672,3 +672,48 @@ func BenchmarkResize(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkFill(b *testing.B) {
+	for _, dir := range []string{"Vertical", "Horizontal"} {
+		for _, filter := range []string{"NearestNeighbor", "Linear", "CatmullRom", "Lanczos"} {
+			for _, format := range []string{"JPEG", "PNG"} {
+				var width, height int
+				switch dir {
+				case "Vertical":
+					width = 100
+					height = 1000
+				case "Horizontal":
+					width = 1000
+					height = 100
+				}
+
+				var f ResampleFilter
+				switch filter {
+				case "NearestNeighbor":
+					f = NearestNeighbor
+				case "Linear":
+					f = Linear
+				case "CatmullRom":
+					f = CatmullRom
+				case "Lanczos":
+					f = Lanczos
+				}
+
+				var img image.Image
+				switch format {
+				case "JPEG":
+					img = testdataBranchesJPG
+				case "PNG":
+					img = testdataBranchesPNG
+				}
+
+				b.Run(fmt.Sprintf("%s %s %s", dir, filter, format), func(b *testing.B) {
+					b.ReportAllocs()
+					for i := 0; i < b.N; i++ {
+						Fill(img, width, height, Center, f)
+					}
+				})
+			}
+		}
+	}
+}
