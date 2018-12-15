@@ -294,11 +294,11 @@ func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilt
 
 	var tmp *image.NRGBA
 	if srcAspectRatio < minAspectRatio {
-		scale := float64(srcW) / float64(minW)
-		tmp = CropAnchor(img, srcW, int(float64(minH)*scale), anchor)
+		cropH := float64(srcW) * float64(minH) / float64(minW)
+		tmp = CropAnchor(img, srcW, int(math.Max(1, cropH)+0.5), anchor)
 	} else {
-		scale := float64(srcH) / float64(minH)
-		tmp = CropAnchor(img, int(float64(minW)*scale), srcH, anchor)
+		cropW := float64(srcH) * float64(minW) / float64(minH)
+		tmp = CropAnchor(img, int(math.Max(1, cropW)+0.5), srcH, anchor)
 	}
 
 	return Resize(tmp, minW, minH, filter)
