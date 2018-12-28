@@ -289,19 +289,50 @@ func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilt
 		return Clone(img)
 	}
 
+	if srcW >= 100 && srcH >= 100 {
+		return cropAndResize(img, minW, minH, anchor, filter)
+	}
+	return resizeAndCrop(img, minW, minH, anchor, filter)
+}
+
+func cropAndResize(img image.Image, width, height int, anchor Anchor, filter ResampleFilter) *image.NRGBA {
+	dstW, dstH := width, height
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
 	srcAspectRatio := float64(srcW) / float64(srcH)
-	minAspectRatio := float64(minW) / float64(minH)
+	dstAspectRatio := float64(dstW) / float64(dstH)
 
 	var tmp *image.NRGBA
-	if srcAspectRatio < minAspectRatio {
-		cropH := float64(srcW) * float64(minH) / float64(minW)
+	if srcAspectRatio < dstAspectRatio {
+		cropH := float64(srcW) * float64(dstH) / float64(dstW)
 		tmp = CropAnchor(img, srcW, int(math.Max(1, cropH)+0.5), anchor)
 	} else {
-		cropW := float64(srcH) * float64(minW) / float64(minH)
+		cropW := float64(srcH) * float64(dstW) / float64(dstH)
 		tmp = CropAnchor(img, int(math.Max(1, cropW)+0.5), srcH, anchor)
 	}
 
-	return Resize(tmp, minW, minH, filter)
+	return Resize(tmp, dstW, dstH, filter)
+}
+
+func resizeAndCrop(img image.Image, width, height int, anchor Anchor, filter ResampleFilter) *image.NRGBA {
+	dstW, dstH := width, height
+
+	srcBounds := img.Bounds()
+	srcW := srcBounds.Dx()
+	srcH := srcBounds.Dy()
+	srcAspectRatio := float64(srcW) / float64(srcH)
+	dstAspectRatio := float64(dstW) / float64(dstH)
+
+	var tmp *image.NRGBA
+	if srcAspectRatio < dstAspectRatio {
+		tmp = Resize(img, dstW, 0, filter)
+	} else {
+		tmp = Resize(img, 0, dstH, filter)
+	}
+
+	return CropAnchor(tmp, dstW, dstH, anchor)
 }
 
 // Thumbnail scales the image up or down using the specified resample filter, crops it
