@@ -13,14 +13,14 @@ as an input, and return a new image of `*image.NRGBA` type (32bit RGBA colors, n
 ## Installation
 
     go get -u github.com/disintegration/imaging
-    
+
 ## Documentation
 
 http://godoc.org/github.com/disintegration/imaging
 
 ## Usage examples
 
-A few usage examples can be found below. See the documentation for the full list of supported functions. 
+A few usage examples can be found below. See the documentation for the full list of supported functions.
 
 ### Image resizing
 
@@ -60,7 +60,7 @@ From faster (lower quality) to slower (higher quality):
 
 Filter                    | Resize result
 --------------------------|---------------------------------------------
-`imaging.NearestNeighbor` | ![dstImage](testdata/out_resize_nearest.png) 
+`imaging.NearestNeighbor` | ![dstImage](testdata/out_resize_nearest.png)
 `imaging.Linear`          | ![dstImage](testdata/out_resize_linear.png)
 `imaging.CatmullRom`      | ![dstImage](testdata/out_resize_catrom.png)
 `imaging.Lanczos`         | ![dstImage](testdata/out_resize_lanczos.png)
@@ -119,6 +119,16 @@ dstImage := imaging.AdjustBrightness(srcImage, 20)
 Original image                     | Brightness = 10                              | Brightness = -10
 -----------------------------------|----------------------------------------------|---------------------------------------------
 ![srcImage](testdata/flowers_small.png) | ![dstImage](testdata/out_brightness_p10.png) | ![dstImage](testdata/out_brightness_m10.png)
+
+### Saturation adjustment
+
+```go
+dstImage := imaging.AdjustSaturation(srcImage, 20)
+```
+
+Original image                     | Saturation = 30                              | Saturation = -30
+-----------------------------------|----------------------------------------------|---------------------------------------------
+![srcImage](testdata/flowers_small.png) | ![dstImage](testdata/out_saturation_p30.png) | ![dstImage](testdata/out_saturation_m30.png)
 
 ## Example code
 
