@@ -2,7 +2,6 @@ package imaging
 
 import (
 	"image"
-	"image/color"
 	"math"
 	"runtime"
 	"testing"
@@ -131,133 +130,157 @@ func compareFloat64(a, b, delta float64) bool {
 	return math.Abs(a-b) <= delta
 }
 
-func compareUint8(a, b, delta uint8) bool {
-	if a > b {
-		return a - b <= delta
-	} else {
-		return b - a <= delta
-	}
-}
-
-var nrgbaHslTestCases = []struct {
-	rgb     color.NRGBA
+var rgbHSLTestCases = []struct {
+	r, g, b uint8
 	h, s, l float64
 }{
 	{
-		rgb: color.NRGBA{R: 255, G: 0, B: 0},
-		h:   0,
-		s:   1,
-		l:   0.5,
+		r: 255,
+		g: 0,
+		b: 0,
+		h: 0.000,
+		s: 1.000,
+		l: 0.500,
 	},
 	{
-		rgb: color.NRGBA{R: 191, G: 191, B: 0},
-		h:   60,
-		s:   1,
-		l:   0.375,
+		r: 191,
+		g: 191,
+		b: 0,
+		h: 0.167,
+		s: 1.000,
+		l: 0.375,
 	},
 	{
-		rgb: color.NRGBA{R: 0, G: 128, B: 0},
-		h:   120,
-		s:   1,
-		l:   0.25,
+		r: 0,
+		g: 128,
+		b: 0,
+		h: 0.333,
+		s: 1.000,
+		l: 0.251,
 	},
 	{
-		rgb: color.NRGBA{R: 128, G: 255, B: 255},
-		h:   180,
-		s:   1,
-		l:   0.75,
+		r: 128,
+		g: 255,
+		b: 255,
+		h: 0.500,
+		s: 1.000,
+		l: 0.751,
 	},
 	{
-		rgb: color.NRGBA{R: 128, G: 128, B: 255},
-		h:   240,
-		s:   1,
-		l:   0.75,
+		r: 128,
+		g: 128,
+		b: 255,
+		h: 0.667,
+		s: 1.000,
+		l: 0.751,
 	},
 	{
-		rgb: color.NRGBA{R: 191, G: 64, B: 191},
-		h:   300,
-		s:   0.5,
-		l:   0.5,
+		r: 191,
+		g: 64,
+		b: 191,
+		h: 0.833,
+		s: 0.498,
+		l: 0.500,
 	},
 	{
-		rgb: color.NRGBA{R: 160, G: 164, B: 36},
-		h:   61.8,
-		s:   0.638,
-		l:   0.393,
+		r: 160,
+		g: 164,
+		b: 36,
+		h: 0.172,
+		s: 0.640,
+		l: 0.392,
 	},
 	{
-		rgb: color.NRGBA{R: 65, G: 27, B: 234},
-		h:   251.1,
-		s:   0.832,
-		l:   0.511,
+		r: 65,
+		g: 27,
+		b: 234,
+		h: 0.697,
+		s: 0.831,
+		l: 0.512,
 	},
 	{
-		rgb: color.NRGBA{R: 30, G: 172, B: 65},
-		h:   134.9,
-		s:   0.707,
-		l:   0.396,
+		r: 30,
+		g: 172,
+		b: 65,
+		h: 0.374,
+		s: 0.703,
+		l: 0.396,
 	},
 	{
-		rgb: color.NRGBA{R: 240, G: 200, B: 14},
-		h:   49.5,
-		s:   0.893,
-		l:   0.497,
+		r: 240,
+		g: 200,
+		b: 14,
+		h: 0.137,
+		s: 0.890,
+		l: 0.498,
 	},
 	{
-		rgb: color.NRGBA{R: 180, G: 48, B: 229},
-		h:   283.7,
-		s:   0.775,
-		l:   0.542,
+		r: 180,
+		g: 48,
+		b: 229,
+		h: 0.788,
+		s: 0.777,
+		l: 0.543,
 	},
 	{
-		rgb: color.NRGBA{R: 237, G: 118, B: 81},
-		h:   14.3,
-		s:   0.817,
-		l:   0.624,
+		r: 237,
+		g: 119,
+		b: 81,
+		h: 0.040,
+		s: 0.813,
+		l: 0.624,
 	},
 	{
-		rgb: color.NRGBA{R: 254, G: 248, B: 136},
-		h:   56.9,
-		s:   0.991,
-		l:   0.765,
+		r: 254,
+		g: 248,
+		b: 136,
+		h: 0.158,
+		s: 0.983,
+		l: 0.765,
 	},
 	{
-		rgb: color.NRGBA{R: 25, G: 203, B: 151},
-		h:   162.4,
-		s:   0.779,
-		l:   0.447,
+		r: 25,
+		g: 203,
+		b: 151,
+		h: 0.451,
+		s: 0.781,
+		l: 0.447,
 	},
 	{
-		rgb: color.NRGBA{R: 54, G: 38, B: 152},
-		h:   248.3,
-		s:   0.601,
-		l:   0.373,
+		r: 54,
+		g: 38,
+		b: 152,
+		h: 0.690,
+		s: 0.600,
+		l: 0.373,
 	},
 	{
-		rgb: color.NRGBA{R: 126, G: 126, B: 184},
-		h:   240.5,
-		s:   0.29,
-		l:   0.607,
+		r: 126,
+		g: 126,
+		b: 184,
+		h: 0.667,
+		s: 0.290,
+		l: 0.608,
 	},
 }
 
-func TestNrgbaToHSL(t *testing.T) {
-	for _, tc := range nrgbaHslTestCases {
+func TestRGBToHSL(t *testing.T) {
+	for _, tc := range rgbHSLTestCases {
 		t.Run("", func(t *testing.T) {
-			h, s, l := nrgbaToHSL(tc.rgb)
-			if !compareFloat64(h, tc.h, 1) || !compareFloat64(s, tc.s, 1) || !compareFloat64(l, tc.l, 1) {
-				t.Fatalf("with %v, expected (%.2f, %.2f, %.2f) but got (%.2f, %.2f, %.2f)", tc.rgb, h, s, l, tc.h, tc.s, tc.l)
+			h, s, l := rgbToHSL(tc.r, tc.g, tc.b)
+			if !compareFloat64(h, tc.h, 0.001) || !compareFloat64(s, tc.s, 0.001) || !compareFloat64(l, tc.l, 0.001) {
+				t.Fatalf("(%d, %d, %d): got (%.3f, %.3f, %.3f) want (%.3f, %.3f, %.3f)", tc.r, tc.g, tc.b, h, s, l, tc.h, tc.s, tc.l)
 			}
 		})
 	}
 }
 
-func TestHslToNRGBA(t *testing.T) {
-	for _, tc := range nrgbaHslTestCases {
+func TestHSLToRGB(t *testing.T) {
+	for _, tc := range rgbHSLTestCases {
 		t.Run("", func(t *testing.T) {
-			rgb := hslToNRGBA(tc.h, tc.s, tc.l)
-			if !compareUint8(rgb.R, tc.rgb.R, 1) || !compareUint8(rgb.G, tc.rgb.G, 1) || !compareUint8(rgb.B, tc.rgb.B, 1) {
-				t.Fatalf("expected %+v but got %+v", tc.rgb, rgb)
+			r, g, b := hslToRGB(tc.h, tc.s, tc.l)
+			if r != tc.r || g != tc.g || b != tc.b {
+				t.Fatalf("(%.3f, %.3f, %.3f): got (%d, %d, %d) want (%d, %d, %d)", tc.h, tc.s, tc.l, r, g, b, tc.r, tc.g, tc.b)
 			}
 		})
 	}

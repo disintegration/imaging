@@ -52,7 +52,7 @@ func Invert(img image.Image) *image.NRGBA {
 // AdjustSaturation changes the saturation of the image using the percentage parameter and returns the adjusted image.
 // The percentage must be in the range (-100, 100).
 // The percentage = 0 gives the original image.
-// The percentage = 100 gives the image with the saturation maxed for each pixel.
+// The percentage = 100 gives the image with the saturation value doubled for each pixel.
 // The percentage = -100 gives the image with the saturation value zeroed for each pixel (grayscale).
 //
 // Examples:
@@ -61,19 +61,16 @@ func Invert(img image.Image) *image.NRGBA {
 //
 func AdjustSaturation(img image.Image, percentage float64) *image.NRGBA {
 	percentage = math.Min(math.Max(percentage, -100), 100)
-	multiplier := percentage / 100
+	multiplier := 1 + percentage/100
 
 	return AdjustFunc(img, func(c color.NRGBA) color.NRGBA {
-		h, s, l := nrgbaToHSL(c)
-		if multiplier > 0 {
-			s += (1 - s) * multiplier
-		} else {
-			s += s * multiplier
+		h, s, l := rgbToHSL(c.R, c.G, c.B)
+		s *= multiplier
+		if s > 1 {
+			s = 1
 		}
-
-		newColor := hslToNRGBA(h, s, l)
-		newColor.A = c.A
-		return newColor
+		r, g, b := hslToRGB(h, s, l)
+		return color.NRGBA{r, g, b, c.A}
 	})
 }
 
