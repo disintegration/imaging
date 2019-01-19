@@ -1,4 +1,4 @@
-package utils
+package imaging
 
 //Conversion functions between any two of the color systems.
 
