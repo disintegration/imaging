@@ -1,4 +1,4 @@
-package imaging
+package utils
 
 //Conversion functions between any two of the color systems.
 
@@ -67,7 +67,7 @@ func _v(m1, m2, hue float64)float64{
 // Y: perceived grey level (0.0 == black, 1.0 == white)
 // I, Q: color components
 
-func Rgb2Yiq(r,g,b  uint8)(float64,float64,float64){
+func Rgb2Yiq(r,g,b  uint32)(float64,float64,float64){
 	r1 := float64(r) / 255
 	g1 := float64(g) / 255
 	b1 := float64(b) / 255
@@ -77,7 +77,7 @@ func Rgb2Yiq(r,g,b  uint8)(float64,float64,float64){
 	return y, i, q
 }
 
-func Yiq2Rgb(y,i,q float64)(uint8, uint8, uint8){
+func Yiq2Rgb(y,i,q float64)(uint32, uint32, uint32){
 	r := y + 0.948262*i + 0.624013*q
 	g := y - 0.276066*i - 0.639810*q
 	b := y - 1.105450*i + 1.729860*q
@@ -99,7 +99,7 @@ func Yiq2Rgb(y,i,q float64)(uint8, uint8, uint8){
 	if b > 1.0{
 		b = 1.0
 	}
-	return uint8(r*255), uint8(g*255), uint8(b*255)
+	return uint32(r*255), uint32(g*255), uint32(b*255)
 }
 
 // HLS: Hue, Luminance, Saturation
@@ -107,7 +107,7 @@ func Yiq2Rgb(y,i,q float64)(uint8, uint8, uint8){
 // L: color lightness
 // S: color saturation
 
-func Rgb2Hls(r, g, b uint8)(float64, float64, float64){
+func Rgb2Hls(r, g, b uint32)(float64, float64, float64){
 	var h, l, s float64
 	r1 := float64(r) / 255
 	g1 := float64(g) / 255
@@ -138,10 +138,10 @@ func Rgb2Hls(r, g, b uint8)(float64, float64, float64){
 	return h*360, l, s
 }
 
-func Hls2Rgb(h,l,s float64)(uint8,uint8,uint8){
+func Hls2Rgb(h,l,s float64)(uint32,uint32,uint32){
 	var m1, m2 float64
 	if s == 0.0{
-		return uint8(l), uint8(l), uint8(l)
+		return uint32(l), uint32(l), uint32(l)
 	}
 	if l <= 0.5{
 		m2 = l * (1.0+s)
@@ -150,7 +150,7 @@ func Hls2Rgb(h,l,s float64)(uint8,uint8,uint8){
 	}
 	m1 = 2.0*l - m2
 	h /= 360
-	return uint8(_v(m1,m2,h+ONE_THIRD)*255), uint8(_v(m1, m2, h)*255), uint8(_v(m1, m2, h-ONE_THIRD)*255)
+	return uint32(_v(m1,m2,h+ONE_THIRD)*255), uint32(_v(m1, m2, h)*255), uint32(_v(m1, m2, h-ONE_THIRD)*255)
 }
 
 // HSV: Hue, Saturation, Value
@@ -158,7 +158,7 @@ func Hls2Rgb(h,l,s float64)(uint8,uint8,uint8){
 // S: color saturation ("purity")
 // V: color brightness
 
-func Rgb2Hsv(r, g ,b uint8)(float64, float64, float64){
+func Rgb2Hsv(r, g ,b uint32)(float64, float64, float64){
 	var h, s, v float64
 	r1 := float64(r) / 255
 	g1 := float64(g) / 255
@@ -185,10 +185,10 @@ func Rgb2Hsv(r, g ,b uint8)(float64, float64, float64){
 	return h*360, s, v
 }
 
-func Hsv2Rgb(h, s, v float64)(uint8, uint8, uint8){
+func Hsv2Rgb(h, s, v float64)(uint32, uint32, uint32){
 	h /= 360
 	if s == 0.0{
-		return uint8(v*255), uint8(v*255), uint8(v*255)
+		return uint32(v*255), uint32(v*255), uint32(v*255)
 	}
 	i := int(h*6.0)
 	f := (h*6.0) - float64(i)
@@ -198,17 +198,17 @@ func Hsv2Rgb(h, s, v float64)(uint8, uint8, uint8){
 	i %= 6
 	switch i{
 	case 0:
-		return uint8(v*255), uint8(t*255), uint8(p*255)
+		return uint32(v*255), uint32(t*255), uint32(p*255)
 	case 1:
-		return uint8(q*255), uint8(v*255), uint8(p*255)
+		return uint32(q*255), uint32(v*255), uint32(p*255)
 	case 2:
-		return uint8(p*255), uint8(v*255), uint8(t*255)
+		return uint32(p*255), uint32(v*255), uint32(t*255)
 	case 3:
-		return uint8(p*255), uint8(q*255), uint8(v*255)
+		return uint32(p*255), uint32(q*255), uint32(v*255)
 	case 4:
-		return uint8(t*255), uint8(p*255), uint8(v*255)
+		return uint32(t*255), uint32(p*255), uint32(v*255)
 	case 5:
-		return uint8(v*255), uint8(p*255), uint8(q*255)
+		return uint32(v*255), uint32(p*255), uint32(q*255)
 	default:
 		return 0, 0, 0
 	}
