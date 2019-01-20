@@ -820,3 +820,12 @@ func TestAdjustFunc(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkAdjustFunc(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		AdjustFunc(testdataBranchesJPG, func(c color.NRGBA) color.NRGBA {
+			return color.NRGBA{c.B, c.G, c.R, c.A}
+		})
+	}
+}

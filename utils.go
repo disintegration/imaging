@@ -63,10 +63,12 @@ func reverse(pix []uint8) {
 	i := 0
 	j := len(pix) - 4
 	for i < j {
-		pix[i+0], pix[j+0] = pix[j+0], pix[i+0]
-		pix[i+1], pix[j+1] = pix[j+1], pix[i+1]
-		pix[i+2], pix[j+2] = pix[j+2], pix[i+2]
-		pix[i+3], pix[j+3] = pix[j+3], pix[i+3]
+		pi := pix[i : i+4 : i+4]
+		pj := pix[j : j+4 : j+4]
+		pi[0], pj[0] = pj[0], pi[0]
+		pi[1], pj[1] = pj[1], pi[1]
+		pi[2], pj[2] = pj[2], pi[2]
+		pi[3], pj[3] = pj[3], pi[3]
 		i += 4
 		j -= 4
 	}

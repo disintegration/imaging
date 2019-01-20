@@ -15,14 +15,15 @@ func Grayscale(img image.Image) *image.NRGBA {
 			i := y * dst.Stride
 			src.scan(0, y, src.w, y+1, dst.Pix[i:i+src.w*4])
 			for x := 0; x < src.w; x++ {
-				r := dst.Pix[i+0]
-				g := dst.Pix[i+1]
-				b := dst.Pix[i+2]
+				d := dst.Pix[i : i+3 : i+3]
+				r := d[0]
+				g := d[1]
+				b := d[2]
 				f := 0.299*float64(r) + 0.587*float64(g) + 0.114*float64(b)
 				y := uint8(f + 0.5)
-				dst.Pix[i+0] = y
-				dst.Pix[i+1] = y
-				dst.Pix[i+2] = y
+				d[0] = y
+				d[1] = y
+				d[2] = y
 				i += 4
 			}
 		}
@@ -39,9 +40,10 @@ func Invert(img image.Image) *image.NRGBA {
 			i := y * dst.Stride
 			src.scan(0, y, src.w, y+1, dst.Pix[i:i+src.w*4])
 			for x := 0; x < src.w; x++ {
-				dst.Pix[i+0] = 255 - dst.Pix[i+0]
-				dst.Pix[i+1] = 255 - dst.Pix[i+1]
-				dst.Pix[i+2] = 255 - dst.Pix[i+2]
+				d := dst.Pix[i : i+3 : i+3]
+				d[0] = 255 - d[0]
+				d[1] = 255 - d[1]
+				d[2] = 255 - d[2]
 				i += 4
 			}
 		}
@@ -191,14 +193,16 @@ func sigmoid(a, b, x float64) float64 {
 func adjustLUT(img image.Image, lut []uint8) *image.NRGBA {
 	src := newScanner(img)
 	dst := image.NewNRGBA(image.Rect(0, 0, src.w, src.h))
+	lut = lut[0:256]
 	parallel(0, src.h, func(ys <-chan int) {
 		for y := range ys {
 			i := y * dst.Stride
 			src.scan(0, y, src.w, y+1, dst.Pix[i:i+src.w*4])
 			for x := 0; x < src.w; x++ {
-				dst.Pix[i+0] = lut[dst.Pix[i+0]]
-				dst.Pix[i+1] = lut[dst.Pix[i+1]]
-				dst.Pix[i+2] = lut[dst.Pix[i+2]]
+				d := dst.Pix[i : i+3 : i+3]
+				d[0] = lut[d[0]]
+				d[1] = lut[d[1]]
+				d[2] = lut[d[2]]
 				i += 4
 			}
 		}
@@ -230,15 +234,16 @@ func AdjustFunc(img image.Image, fn func(c color.NRGBA) color.NRGBA) *image.NRGB
 			i := y * dst.Stride
 			src.scan(0, y, src.w, y+1, dst.Pix[i:i+src.w*4])
 			for x := 0; x < src.w; x++ {
-				r := dst.Pix[i+0]
-				g := dst.Pix[i+1]
-				b := dst.Pix[i+2]
-				a := dst.Pix[i+3]
+				d := dst.Pix[i : i+4 : i+4]
+				r := d[0]
+				g := d[1]
+				b := d[2]
+				a := d[3]
 				c := fn(color.NRGBA{r, g, b, a})
-				dst.Pix[i+0] = c.R
-				dst.Pix[i+1] = c.G
-				dst.Pix[i+2] = c.B
-				dst.Pix[i+3] = c.A
+				d[0] = c.R
+				d[1] = c.G
+				d[2] = c.B
+				d[3] = c.A
 				i += 4
 			}
 		}
