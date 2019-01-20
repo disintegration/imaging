@@ -270,9 +270,9 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 //	dstImage := imaging.Fill(srcImage, 800, 600, imaging.Center, imaging.Lanczos)
 //
 func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilter) *image.NRGBA {
-	minW, minH := width, height
+	dstW, dstH := width, height
 
-	if minW <= 0 || minH <= 0 {
+	if dstW <= 0 || dstH <= 0 {
 		return &image.NRGBA{}
 	}
 
@@ -284,14 +284,14 @@ func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilt
 		return &image.NRGBA{}
 	}
 
-	if srcW == minW && srcH == minH {
+	if srcW == dstW && srcH == dstH {
 		return Clone(img)
 	}
 
 	if srcW >= 100 && srcH >= 100 {
-		return cropAndResize(img, minW, minH, anchor, filter)
+		return cropAndResize(img, dstW, dstH, anchor, filter)
 	}
-	return resizeAndCrop(img, minW, minH, anchor, filter)
+	return resizeAndCrop(img, dstW, dstH, anchor, filter)
 }
 
 // cropAndResize crops the image to the smallest possible size that has the required aspect ratio using
