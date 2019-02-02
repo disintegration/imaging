@@ -58,10 +58,7 @@ func precomputeWeights(dstSize, srcSize int, filter ResampleFilter) [][]indexWei
 // filter and returns the transformed image. If one of width or height is 0, the image aspect
 // ratio is preserved.
 //
-// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
-// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
-//
-// Usage example:
+// Example:
 //
 //	dstImage := imaging.Resize(srcImage, 800, 600, imaging.Lanczos)
 //
@@ -218,10 +215,7 @@ func resizeNearest(img image.Image, width, height int) *image.NRGBA {
 // Fit scales down the image using the specified resample filter to fit the specified
 // maximum width and height and returns the transformed image.
 //
-// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
-// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
-//
-// Usage example:
+// Example:
 //
 //	dstImage := imaging.Fit(srcImage, 800, 600, imaging.Lanczos)
 //
@@ -262,10 +256,7 @@ func Fit(img image.Image, width, height int, filter ResampleFilter) *image.NRGBA
 // Fill creates an image with the specified dimensions and fills it with the scaled source image.
 // To achieve the correct aspect ratio without stretching, the source image will be cropped.
 //
-// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
-// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
-//
-// Usage example:
+// Example:
 //
 //	dstImage := imaging.Fill(srcImage, 800, 600, imaging.Center, imaging.Lanczos)
 //
@@ -344,10 +335,7 @@ func resizeAndCrop(img image.Image, width, height int, anchor Anchor, filter Res
 // Thumbnail scales the image up or down using the specified resample filter, crops it
 // to the specified width and hight and returns the transformed image.
 //
-// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
-// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
-//
-// Usage example:
+// Example:
 //
 //	dstImage := imaging.Thumbnail(srcImage, 100, 100, imaging.Lanczos)
 //
@@ -355,29 +343,21 @@ func Thumbnail(img image.Image, width, height int, filter ResampleFilter) *image
 	return Fill(img, width, height, Center, filter)
 }
 
-// ResampleFilter is a resampling filter struct. It can be used to define custom filters.
-//
-// Supported resample filters: NearestNeighbor, Box, Linear, Hermite, MitchellNetravali,
-// CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine.
+// ResampleFilter specifies a resampling filter to be used for image resizing.
 //
 //	General filter recommendations:
 //
 //	- Lanczos
-//		High-quality resampling filter for photographic images yielding sharp results.
-//		It's slower than cubic filters (see below).
+//		A high-quality resampling filter for photographic images yielding sharp results.
 //
 //	- CatmullRom
-//		A sharp cubic filter. It's a good filter for both upscaling and downscaling if sharp results are needed.
+//		A sharp cubic filter that is faster than Lanczos filter while providing similar results.
 //
 //	- MitchellNetravali
-//		A high quality cubic filter that produces smoother results with less ringing artifacts than CatmullRom.
-//
-//	- BSpline
-//		A good filter if a very smooth output is needed.
+//		A cubic filter that produces smoother results with less ringing artifacts than CatmullRom.
 //
 //	- Linear
-//		Bilinear interpolation filter, produces reasonably good, smooth output.
-//		It's faster than cubic filters.
+//		Bilinear resampling filter, produces a smooth output. Faster than cubic filters.
 //
 //	- Box
 //		Simple and fast averaging filter appropriate for downscaling.
@@ -412,7 +392,7 @@ var CatmullRom ResampleFilter
 // BSpline is a smooth cubic filter (BC-spline; B=1; C=0).
 var BSpline ResampleFilter
 
-// Gaussian is a Gaussian blurring Filter.
+// Gaussian is a Gaussian blurring filter.
 var Gaussian ResampleFilter
 
 // Bartlett is a Bartlett-windowed sinc filter (3 lobes).

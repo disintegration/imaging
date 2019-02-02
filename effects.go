@@ -12,7 +12,7 @@ func gaussianBlurKernel(x, sigma float64) float64 {
 // Blur produces a blurred version of the image using a Gaussian function.
 // Sigma parameter must be positive and indicates how much the image will be blurred.
 //
-// Usage example:
+// Example:
 //
 //	dstImage := imaging.Blur(srcImage, 3.5)
 //
@@ -134,7 +134,7 @@ func blurVertical(img image.Image, kernel []float64) *image.NRGBA {
 // Sharpen produces a sharpened version of the image.
 // Sigma parameter must be positive and indicates how much the image will be sharpened.
 //
-// Usage example:
+// Example:
 //
 //	dstImage := imaging.Sharpen(srcImage, 3.5)
 //

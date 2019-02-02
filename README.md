@@ -8,7 +8,7 @@
 Package imaging provides basic image processing functions (resize, rotate, crop, brightness/contrast adjustments, etc.).
 
 All the image processing functions provided by the package accept any image type that implements `image.Image` interface
-as an input, and return a new image of `*image.NRGBA` type (32bit RGBA colors, not premultiplied by alpha).
+as an input, and return a new image of `*image.NRGBA` type (32bit RGBA colors, non-premultiplied alpha).
 
 ## Installation
 
@@ -39,13 +39,12 @@ dstImageFill := imaging.Fill(srcImage, 100, 100, imaging.Center, imaging.Lanczos
 ```
 
 Imaging supports image resizing using various resampling filters. The most notable ones:
-- `NearestNeighbor` - Fastest resampling filter, no antialiasing.
+- `Lanczos` - A high-quality resampling filter for photographic images yielding sharp results.
+- `CatmullRom` - A sharp cubic filter that is faster than Lanczos filter while providing similar results.
+- `MitchellNetravali` - A cubic filter that produces smoother results with less ringing artifacts than CatmullRom.
+- `Linear` - Bilinear resampling filter, produces smooth output. Faster than cubic filters.
 - `Box` - Simple and fast averaging filter appropriate for downscaling. When upscaling it's similar to NearestNeighbor.
-- `Linear` - Bilinear filter, smooth and reasonably fast.
-- `MitchellNetravali` - А smooth bicubic filter.
-- `CatmullRom` - A sharp bicubic filter.
-- `Gaussian` - Blurring filter that uses gaussian function, useful for noise removal.
-- `Lanczos` - High-quality resampling filter for photographic images yielding sharp results, slower than cubic filters.
+- `NearestNeighbor` - Fastest resampling filter, no antialiasing.
 
 The full list of supported filters:  NearestNeighbor, Box, Linear, Hermite, MitchellNetravali, CatmullRom, BSpline, Gaussian, Lanczos, Hann, Hamming, Blackman, Bartlett, Welch, Cosine. Custom filters can be created using ResampleFilter struct.
 

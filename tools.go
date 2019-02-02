@@ -169,7 +169,7 @@ func PasteCenter(background, img image.Image) *image.NRGBA {
 // and returns the combined image. Opacity parameter is the opacity of the img
 // image layer, used to compose the images, it must be from 0.0 to 1.0.
 //
-// Usage examples:
+// Examples:
 //
 //	// Draw spriteImage over backgroundImage at the given position (x=50, y=50).
 //	dstImage := imaging.Overlay(backgroundImage, spriteImage, image.Pt(50, 50), 1.0)
