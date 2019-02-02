@@ -52,14 +52,20 @@ func AutoOrientation(enabled bool) DecodeOption {
 
 // Decode reads an image from r.
 func Decode(r io.Reader, opts ...DecodeOption) (image.Image, error) {
+	i, _, err := DecodeWithFormat(r, opts...)
+	return i, err
+}
+
+// Decode reads an image from r and returns it with the format.
+func DecodeWithFormat(r io.Reader, opts ...DecodeOption) (image.Image, Format, error) {
 	cfg := defaultDecodeConfig
 	for _, option := range opts {
 		option(&cfg)
 	}
 
 	if !cfg.autoOrientation {
-		img, _, err := image.Decode(r)
-		return img, err
+		img, format, err := image.Decode(r)
+		return img, formatExts[format], err
 	}
 
 	var orient orientation
@@ -72,14 +78,14 @@ func Decode(r io.Reader, opts ...DecodeOption) (image.Image, error) {
 		io.Copy(ioutil.Discard, pr)
 	}()
 
-	img, _, err := image.Decode(r)
+	img, format, err := image.Decode(r)
 	pw.Close()
 	<-done
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return fixOrientation(img, orient), nil
+	return fixOrientation(img, orient), formatExts[format], nil
 }
 
 // Open loads an image from file.

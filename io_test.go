@@ -233,6 +233,37 @@ func TestFormatFromExtension(t *testing.T) {
 	}
 }
 
+func TestDecodeWithFormat(t *testing.T) {
+	testCases := []struct {
+		name string
+		file string
+		want Format
+	}{
+		{
+			name: "JPEG Decode",
+			file: "testdata/branches.jpg",
+			want: JPEG,
+		},
+		{
+			name: "PNG Decode",
+			file: "testdata/branches.png",
+			want: PNG,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, err := ioutil.ReadFile(tc.file)
+			if err != nil {
+				t.Errorf("got error %#v", err)
+			}
+			_, format, err := DecodeWithFormat(bytes.NewReader(b))
+			if format != tc.want {
+				t.Errorf("got result %#v want %#v", formatNames[format], formatNames[tc.want])
+			}
+		})
+	}
+}
+
 func TestReadOrientation(t *testing.T) {
 	testCases := []struct {
 		path   string
