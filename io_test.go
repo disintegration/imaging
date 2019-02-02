@@ -180,7 +180,7 @@ func TestFormats(t *testing.T) {
 		GIF:        "GIF",
 		BMP:        "BMP",
 		TIFF:       "TIFF",
-		Format(-1): "Unsupported",
+		Format(-1): "",
 	}
 	for format, name := range formatNames {
 		got := format.String()
