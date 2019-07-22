@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/harukasan/go-libwebp/webp"
+
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -111,6 +113,7 @@ const (
 	GIF
 	TIFF
 	BMP
+	WEBP
 )
 
 var formatExts = map[string]Format{
@@ -121,6 +124,7 @@ var formatExts = map[string]Format{
 	"tif":  TIFF,
 	"tiff": TIFF,
 	"bmp":  BMP,
+	"webp": WEBP,
 }
 
 var formatNames = map[Format]string{
@@ -129,6 +133,7 @@ var formatNames = map[Format]string{
 	GIF:  "GIF",
 	TIFF: "TIFF",
 	BMP:  "BMP",
+	WEBP: "WEBP",
 }
 
 func (f Format) String() string {
@@ -155,19 +160,21 @@ func FormatFromFilename(filename string) (Format, error) {
 }
 
 type encodeConfig struct {
-	jpegQuality         int
-	gifNumColors        int
-	gifQuantizer        draw.Quantizer
-	gifDrawer           draw.Drawer
-	pngCompressionLevel png.CompressionLevel
+	jpegQuality          int
+	gifNumColors         int
+	gifQuantizer         draw.Quantizer
+	gifDrawer            draw.Drawer
+	pngCompressionLevel  png.CompressionLevel
+	webpCompressionLevel int
 }
 
 var defaultEncodeConfig = encodeConfig{
-	jpegQuality:         95,
-	gifNumColors:        256,
-	gifQuantizer:        nil,
-	gifDrawer:           nil,
-	pngCompressionLevel: png.DefaultCompression,
+	jpegQuality:          95,
+	gifNumColors:         256,
+	gifQuantizer:         nil,
+	gifDrawer:            nil,
+	pngCompressionLevel:  png.DefaultCompression,
+	webpCompressionLevel: 2,
 }
 
 // EncodeOption sets an optional parameter for the Encode and Save functions.
@@ -213,6 +220,15 @@ func PNGCompressionLevel(level png.CompressionLevel) EncodeOption {
 	}
 }
 
+// WebPCompressionLevel returns an EncodeOption that sets the compression level
+// of the WebP-encoded image. This can be between 0 (fastest, lowest
+// compression) and 9 (slower, best compression). Default is 2.
+func WebPCompressionLevel(level int) EncodeOption {
+	return func(c *encodeConfig) {
+		c.webpCompressionLevel = level
+	}
+}
+
 // Encode writes the image img to w in the specified format (JPEG, PNG, GIF, TIFF or BMP).
 func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) error {
 	cfg := defaultEncodeConfig
@@ -248,6 +264,13 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 
 	case BMP:
 		return bmp.Encode(w, img)
+
+	case WEBP:
+		c, err := webp.ConfigLosslessPreset(cfg.webpCompressionLevel)
+		if err != nil {
+			return err
+		}
+		return webp.EncodeRGBA(w, img, c)
 	}
 
 	return ErrUnsupportedFormat
