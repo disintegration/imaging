@@ -99,7 +99,7 @@ func TestBlurGolden(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to open image: %v", err)
 		}
-		if !compareNRGBA(got, toNRGBA(want), 0) {
+		if !compareNRGBAGolden(got, toNRGBA(want)) {
 			t.Fatalf("resulting image differs from golden: %s", name)
 		}
 	}
@@ -224,7 +224,7 @@ func TestSharpenGolden(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to open image: %v", err)
 		}
-		if !compareNRGBA(got, toNRGBA(want), 0) {
+		if !compareNRGBAGolden(got, toNRGBA(want)) {
 			t.Fatalf("resulting image differs from golden: %s", name)
 		}
 	}

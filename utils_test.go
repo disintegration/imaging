@@ -126,6 +126,20 @@ func compareBytes(a, b []uint8, delta int) bool {
 	return true
 }
 
+// compareNRGBAGolden is a special version of compareNRGBA used in golden tests.
+// All the golden images are generated on amd64 architecture. Due to differences
+// in floating-point rounding on different architectures, we need to add some
+// level of tolerance when comparing images on architectures other than amd64.
+// See https://golang.org/ref/spec#Floating_point_operators for information on
+// fused multiply and add (FMA) instruction.
+func compareNRGBAGolden(img1, img2 *image.NRGBA) bool {
+	delta := 0
+	if runtime.GOARCH != "amd64" {
+		delta = 1
+	}
+	return compareNRGBA(img1, img2, delta)
+}
+
 func compareFloat64(a, b, delta float64) bool {
 	return math.Abs(a-b) <= delta
 }
