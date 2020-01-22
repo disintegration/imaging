@@ -95,7 +95,10 @@ func Crop(img image.Image, rect image.Rectangle) *image.NRGBA {
 	r := rect.Intersect(img.Bounds()).Sub(img.Bounds().Min)
 	if r.Empty() {
 		return &image.NRGBA{}
+	} else if r.Eq(img.Bounds().Sub(img.Bounds().Min)) {
+		return Clone(img)
 	}
+
 	src := newScanner(img)
 	dst := image.NewNRGBA(image.Rect(0, 0, r.Dx(), r.Dy()))
 	rowSize := r.Dx() * 4
@@ -132,7 +135,10 @@ func Paste(background, img image.Image, pos image.Point) *image.NRGBA {
 	interRect := pasteRect.Intersect(dst.Bounds())
 	if interRect.Empty() {
 		return dst
+	} else if interRect.Eq(dst.Bounds()) {
+		return Clone(img)
 	}
+
 	src := newScanner(img)
 	parallel(interRect.Min.Y, interRect.Max.Y, func(ys <-chan int) {
 		for y := range ys {

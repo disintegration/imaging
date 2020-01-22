@@ -87,6 +87,10 @@ func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NR
 		dstH = int(math.Max(1.0, math.Floor(tmpH+0.5)))
 	}
 
+	if srcW == dstW && srcH == dstH {
+		return Clone(img)
+	}
+
 	if filter.Support <= 0 {
 		// Nearest-neighbor special case.
 		return resizeNearest(img, dstW, dstH)
@@ -94,14 +98,11 @@ func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NR
 
 	if srcW != dstW && srcH != dstH {
 		return resizeVertical(resizeHorizontal(img, dstW, filter), dstH, filter)
-	}
-	if srcW != dstW {
+	} else if srcW != dstW {
 		return resizeHorizontal(img, dstW, filter)
-	}
-	if srcH != dstH {
+	} else {
 		return resizeVertical(img, dstH, filter)
 	}
-	return Clone(img)
 }
 
 func resizeHorizontal(img image.Image, width int, filter ResampleFilter) *image.NRGBA {
