@@ -793,7 +793,7 @@ func TestPaste(t *testing.T) {
 		{
 			"Paste 2x3 2x3",
 			&image.NRGBA{
-				Rect:   image.Rect(0, 0, 1, 2),
+				Rect:   image.Rect(0, 0, 2, 3),
 				Stride: 2 * 4,
 				Pix: []uint8{
 					0x00, 0x11, 0x22, 0x33, 0xcc, 0xdd, 0xee, 0xff,
