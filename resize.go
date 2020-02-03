@@ -98,11 +98,12 @@ func Resize(img image.Image, width, height int, filter ResampleFilter) *image.NR
 
 	if srcW != dstW && srcH != dstH {
 		return resizeVertical(resizeHorizontal(img, dstW, filter), dstH, filter)
-	} else if srcW != dstW {
-		return resizeHorizontal(img, dstW, filter)
-	} else {
-		return resizeVertical(img, dstH, filter)
 	}
+	if srcW != dstW {
+		return resizeHorizontal(img, dstW, filter)
+	}
+	return resizeVertical(img, dstH, filter)
+
 }
 
 func resizeHorizontal(img image.Image, width int, filter ResampleFilter) *image.NRGBA {

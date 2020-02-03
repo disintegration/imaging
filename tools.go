@@ -95,7 +95,8 @@ func Crop(img image.Image, rect image.Rectangle) *image.NRGBA {
 	r := rect.Intersect(img.Bounds()).Sub(img.Bounds().Min)
 	if r.Empty() {
 		return &image.NRGBA{}
-	} else if r.Eq(img.Bounds().Sub(img.Bounds().Min)) {
+	}
+	if r.Eq(img.Bounds().Sub(img.Bounds().Min)) {
 		return Clone(img)
 	}
 
@@ -135,7 +136,8 @@ func Paste(background, img image.Image, pos image.Point) *image.NRGBA {
 	interRect := pasteRect.Intersect(dst.Bounds())
 	if interRect.Empty() {
 		return dst
-	} else if interRect.Eq(dst.Bounds()) {
+	}
+	if interRect.Eq(dst.Bounds()) {
 		return Clone(img)
 	}
 
