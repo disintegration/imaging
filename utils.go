@@ -5,7 +5,16 @@ import (
 	"math"
 	"runtime"
 	"sync"
+	"sync/atomic"
 )
+
+var maxProcs int64
+
+// SetMaxProcs limits the number of concurrent processing goroutines to the given value.
+// A value <= 0 clears the limit.
+func SetMaxProcs(value int) {
+	atomic.StoreInt64(&maxProcs, int64(value))
+}
 
 // parallel processes the data in separate goroutines.
 func parallel(start, stop int, fn func(<-chan int)) {
@@ -15,6 +24,10 @@ func parallel(start, stop int, fn func(<-chan int)) {
 	}
 
 	procs := runtime.GOMAXPROCS(0)
+	limit := int(atomic.LoadInt64(&maxProcs))
+	if procs > limit && limit > 0 {
+		procs = limit
+	}
 	if procs > count {
 		procs = count
 	}

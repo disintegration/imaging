@@ -4,6 +4,7 @@ import (
 	"image"
 	"math"
 	"runtime"
+	"sync/atomic"
 	"testing"
 )
 
@@ -47,6 +48,44 @@ func testParallelN(n, procs int) bool {
 		}
 	}
 	return true
+}
+
+func TestParallelMaxProcs(t *testing.T) {
+	for _, n := range []int{0, 1, 10, 100, 1000} {
+		for _, p := range []int{1, 2, 4, 8, 16, 100} {
+			if !testParallelMaxProcsN(n, p) {
+				t.Fatalf("test [parallel max procs %d %d] failed", n, p)
+			}
+		}
+	}
+}
+
+func testParallelMaxProcsN(n, procs int) bool {
+	data := make([]bool, n)
+	SetMaxProcs(procs)
+	parallel(0, n, func(is <-chan int) {
+		for i := range is {
+			data[i] = true
+		}
+	})
+	SetMaxProcs(0)
+	for i := 0; i < n; i++ {
+		if !data[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestSetMaxProcs(t *testing.T) {
+	for _, p := range []int{-1, 0, 10} {
+		SetMaxProcs(p)
+		if int(atomic.LoadInt64(&maxProcs)) != p {
+			t.Fatalf("test [set max procs %d] failed", p)
+		}
+	}
+
+	SetMaxProcs(0)
 }
 
 func TestClamp(t *testing.T) {
