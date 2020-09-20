@@ -95,7 +95,7 @@ func AdjustHue(img image.Image, shift float64) *image.NRGBA {
 	}
 
 	shift = math.Min(math.Max(shift, -180), 180)
-	shift = shift / 180
+	shift = shift / -360
 
 	return AdjustFunc(img, func(c color.NRGBA) color.NRGBA {
 		h, s, l := rgbToHSL(c.R, c.G, c.B)
