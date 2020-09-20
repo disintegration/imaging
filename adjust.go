@@ -80,6 +80,31 @@ func AdjustSaturation(img image.Image, percentage float64) *image.NRGBA {
 	})
 }
 
+// AdjustHue changes the hue of the image using the shift parameter (measued in degrees) and returns the adjusted image.
+// The shift must be in the range (-180, 180).
+// The shift = 0 gives the original image.
+// The shift = 180 (or -180) corresponds to a 180° degree rotation of the color wheel and thus gives the image with its hue inverted for each pixel.
+//
+// Examples:
+//  dstImage = imaging.AdjustHue(srcImage, 90) // Shift Hue by 90°.
+//  dstImage = imaging.AdjustHue(srcImage, -30) // Shift Hue by -30°.
+//
+func AdjustHue(img image.Image, shift float64) *image.NRGBA {
+	if shift == 0 {
+		return Clone(img)
+	}
+
+	shift = math.Min(math.Max(shift, -180), 180)
+	shift = shift / 180
+
+	return AdjustFunc(img, func(c color.NRGBA) color.NRGBA {
+		h, s, l := rgbToHSL(c.R, c.G, c.B)
+		h = math.Mod(h+shift, 1.0)
+		r, g, b := hslToRGB(h, s, l)
+		return color.NRGBA{r, g, b, c.A}
+	})
+}
+
 // AdjustContrast changes the contrast of the image using the percentage parameter and returns the adjusted image.
 // The percentage must be in range (-100, 100). The percentage = 0 gives the original image.
 // The percentage = -100 gives solid gray image.
