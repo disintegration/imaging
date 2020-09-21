@@ -129,6 +129,16 @@ Original image                     | Saturation = 30                            
 -----------------------------------|----------------------------------------------|---------------------------------------------
 ![srcImage](testdata/flowers_small.png) | ![dstImage](testdata/out_saturation_p30.png) | ![dstImage](testdata/out_saturation_m30.png)
 
+### Hue adjustment
+
+```go
+dstImage := imaging.AdjustHue(srcImage, 20)
+```
+
+Original image                     | Hue = 60                                     | Hue = -60
+-----------------------------------|----------------------------------------------|---------------------------------------------
+![srcImage](testdata/flowers_small.png) | ![dstImage](testdata/out_hue_p60.png) | ![dstImage](testdata/out_hue_m60.png)
+
 ## FAQ
 
 ### Incorrect image orientation after processing (e.g. an image appears rotated after resizing)
