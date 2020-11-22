@@ -247,7 +247,7 @@ func BenchmarkAdjustSaturation(b *testing.B) {
 	}
 }
 
-func TestAdjustHues(t *testing.T) {
+func TestAdjustHue(t *testing.T) {
 	testCases := []struct {
 		name string
 		src  image.Image
@@ -255,7 +255,7 @@ func TestAdjustHues(t *testing.T) {
 		want *image.NRGBA
 	}{
 		{
-			"AdjustHues 3x3 10",
+			"AdjustHue 3x3 10",
 			&image.NRGBA{
 				Rect:   image.Rect(-1, -1, 2, 2),
 				Stride: 3 * 4,
@@ -277,7 +277,7 @@ func TestAdjustHues(t *testing.T) {
 			},
 		},
 		{
-			"AdjustHues 3x3 180",
+			"AdjustHue 3x3 180",
 			&image.NRGBA{
 				Rect:   image.Rect(-1, -1, 2, 2),
 				Stride: 3 * 4,
@@ -299,7 +299,7 @@ func TestAdjustHues(t *testing.T) {
 			},
 		},
 		{
-			"AdjustHues 3x3 -10",
+			"AdjustHue 3x3 -10",
 			&image.NRGBA{
 				Rect:   image.Rect(-1, -1, 2, 2),
 				Stride: 3 * 4,
@@ -321,7 +321,7 @@ func TestAdjustHues(t *testing.T) {
 			},
 		},
 		{
-			"AdjustHues 3x3 -180",
+			"AdjustHue 3x3 -180",
 			&image.NRGBA{
 				Rect:   image.Rect(-1, -1, 2, 2),
 				Stride: 3 * 4,
@@ -343,7 +343,7 @@ func TestAdjustHues(t *testing.T) {
 			},
 		},
 		{
-			"AdjustHues 3x3 0",
+			"AdjustHue 3x3 0",
 			&image.NRGBA{
 				Rect:   image.Rect(-1, -1, 2, 2),
 				Stride: 3 * 4,
@@ -367,7 +367,7 @@ func TestAdjustHues(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := AdjustHues(tc.src, tc.p)
+			got := AdjustHue(tc.src, tc.p)
 			if !compareNRGBA(got, tc.want, 0) {
 				t.Fatalf("got result %#v want %#v", got, tc.want)
 			}
@@ -375,14 +375,14 @@ func TestAdjustHues(t *testing.T) {
 	}
 }
 
-func TestAdjustHuesGolden(t *testing.T) {
+func TestAdjustHueGolden(t *testing.T) {
 	for name, p := range map[string]float64{
-		"out_hues_m120.png": -120,
-		"out_hues_m60.png":  -60,
-		"out_hues_p60.png":  60,
-		"out_hues_p120.png": 120,
+		"out_hue_m120.png": -120,
+		"out_hue_m60.png":  -60,
+		"out_hue_p60.png":  60,
+		"out_hue_p120.png": 120,
 	} {
-		got := AdjustHues(testdataFlowersSmallPNG, p)
+		got := AdjustHue(testdataFlowersSmallPNG, p)
 		want, err := Open("testdata/" + name)
 		if err != nil {
 			t.Fatalf("failed to open image: %v", err)
@@ -393,10 +393,10 @@ func TestAdjustHuesGolden(t *testing.T) {
 	}
 }
 
-func BenchmarkAdjustHues(b *testing.B) {
+func BenchmarkAdjustHue(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		AdjustHues(testdataBranchesJPG, 10)
+		AdjustHue(testdataBranchesJPG, 10)
 	}
 }
 

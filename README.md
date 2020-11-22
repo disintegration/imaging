@@ -132,12 +132,12 @@ Original image                     | Saturation = 30                            
 ### Hue adjustment
 
 ```go
-dstImage := imaging.AdjustHues(srcImage, 20)
+dstImage := imaging.AdjustHue(srcImage, 20)
 ```
 
 Original image                     | Hue = 60                                     | Hue = -60
 -----------------------------------|----------------------------------------------|---------------------------------------------
-![srcImage](testdata/flowers_small.png) | ![dstImage](testdata/out_hues_p60.png) | ![dstImage](testdata/out_hues_m60.png)
+![srcImage](testdata/flowers_small.png) | ![dstImage](testdata/out_hue_p60.png) | ![dstImage](testdata/out_hue_m60.png)
 
 ## FAQ
 
