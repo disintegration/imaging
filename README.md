@@ -134,7 +134,7 @@ Original image                     | Saturation = 30                            
 ### Incorrect image orientation after processing (e.g. an image appears rotated after resizing)
 
 Most probably, the given image contains the EXIF orientation tag.
-The stadard `image/*` packages do not support loading and saving
+The standard `image/*` packages do not support loading and saving
 this kind of information. To fix the issue, try opening images with
 the `AutoOrientation` decode option. If this option is set to `true`,
 the image orientation is changed after decoding, according to the
