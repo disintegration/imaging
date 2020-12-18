@@ -89,7 +89,7 @@ func AdjustSaturation(img image.Image, percentage float64) *image.NRGBA {
 //  dstImage = imaging.AdjustHue(srcImage, -30) // Shift Hue by -30°.
 //
 func AdjustHue(img image.Image, shift float64) *image.NRGBA {
-	if shift == 0 {
+	if math.Mod(shift, 360) == 0 {
 		return Clone(img)
 	}
 
