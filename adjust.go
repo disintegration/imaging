@@ -81,8 +81,7 @@ func AdjustSaturation(img image.Image, percentage float64) *image.NRGBA {
 }
 
 // AdjustHue changes the hue of the image using the shift parameter (measured in degrees) and returns the adjusted image.
-// The shift must be in the range (-180, 180).
-// The shift = 0 gives the original image.
+// The shift = 0 (or 360 / -360 / etc.) gives the original image.
 // The shift = 180 (or -180) corresponds to a 180° degree rotation of the color wheel and thus gives the image with its hue inverted for each pixel.
 //
 // Examples:
@@ -94,13 +93,16 @@ func AdjustHue(img image.Image, shift float64) *image.NRGBA {
 		return Clone(img)
 	}
 
-	shift = math.Min(math.Max(shift, -180), 180)
 	summand := shift / 360
 
 	return AdjustFunc(img, func(c color.NRGBA) color.NRGBA {
 		h, s, l := rgbToHSL(c.R, c.G, c.B)
 		h += summand
-		h = math.Mod(h, 1.0)
+		h = math.Mod(h, 1)
+		//Adding 1 because Golang's Modulo function behaves differently to similar operators in most other languages.
+		if h < 0 {
+			h++
+		}
 		r, g, b := hslToRGB(h, s, l)
 		return color.NRGBA{r, g, b, c.A}
 	})
