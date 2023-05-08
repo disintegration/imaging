@@ -23,6 +23,18 @@ type fileSystem interface {
 	Open(string) (io.ReadCloser, error)
 }
 
+const (
+	OrientationUnspecified = 0
+	OrientationNormal      = 1
+	OrientationFlipH       = 2
+	OrientationRotate180   = 3
+	OrientationFlipV       = 4
+	OrientationTranspose   = 5
+	OrientationRotate270   = 6
+	OrientationTransverse  = 7
+	OrientationRotate90    = 8
+)
+
 type localFS struct{}
 
 func (localFS) Create(name string) (io.WriteCloser, error) { return os.Create(name) }
@@ -421,8 +433,8 @@ func readOrientation(r io.Reader) orientation {
 	return orientationUnspecified // Missing orientation tag.
 }
 
-// fixOrientation applies a transform to img corresponding to the given orientation flag.
-func fixOrientation(img image.Image, o orientation) image.Image {
+// FixOrientation applies a transform to img corresponding to the given orientation flag.
+func FixOrientation(img image.Image, o orientation) image.Image {
 	switch o {
 	case orientationNormal:
 	case orientationFlipH:
