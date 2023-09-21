@@ -9,7 +9,6 @@ import (
 	"image/draw"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +25,7 @@ type badFS struct{}
 
 func (badFS) Create(name string) (io.WriteCloser, error) {
 	if name == "badFile.jpg" {
-		return badFile{ioutil.Discard}, nil
+		return badFile{io.Discard}, nil
 	}
 	return nil, errCreate
 }
@@ -93,7 +92,7 @@ func TestOpenSave(t *testing.T) {
 		},
 	}
 
-	dir, err := ioutil.TempDir("", "imaging")
+	dir, err := os.MkdirTemp("", "imaging")
 	if err != nil {
 		t.Fatalf("failed to create temporary directory: %v", err)
 	}

@@ -58,9 +58,9 @@ func Invert(img image.Image) *image.NRGBA {
 // The percentage = -100 gives the image with the saturation value zeroed for each pixel (grayscale).
 //
 // Examples:
-//  dstImage = imaging.AdjustSaturation(srcImage, 25) // Increase image saturation by 25%.
-//  dstImage = imaging.AdjustSaturation(srcImage, -10) // Decrease image saturation by 10%.
 //
+//	dstImage = imaging.AdjustSaturation(srcImage, 25) // Increase image saturation by 25%.
+//	dstImage = imaging.AdjustSaturation(srcImage, -10) // Decrease image saturation by 10%.
 func AdjustSaturation(img image.Image, percentage float64) *image.NRGBA {
 	if percentage == 0 {
 		return Clone(img)
@@ -82,12 +82,13 @@ func AdjustSaturation(img image.Image, percentage float64) *image.NRGBA {
 
 // AdjustHue changes the hue of the image using the shift parameter (measured in degrees) and returns the adjusted image.
 // The shift = 0 (or 360 / -360 / etc.) gives the original image.
-// The shift = 180 (or -180) corresponds to a 180° degree rotation of the color wheel and thus gives the image with its hue inverted for each pixel.
+// The shift = 180 (or -180) corresponds to a 180° degree rotation
+// of the color wheel and thus gives the image with its hue inverted for each pixel.
 //
 // Examples:
-//  dstImage = imaging.AdjustHue(srcImage, 90) // Shift Hue by 90°.
-//  dstImage = imaging.AdjustHue(srcImage, -30) // Shift Hue by -30°.
 //
+//	dstImage = imaging.AdjustHue(srcImage, 90) // Shift Hue by 90°.
+//	dstImage = imaging.AdjustHue(srcImage, -30) // Shift Hue by -30°.
 func AdjustHue(img image.Image, shift float64) *image.NRGBA {
 	if math.Mod(shift, 360) == 0 {
 		return Clone(img)
@@ -99,7 +100,7 @@ func AdjustHue(img image.Image, shift float64) *image.NRGBA {
 		h, s, l := rgbToHSL(c.R, c.G, c.B)
 		h += summand
 		h = math.Mod(h, 1)
-		//Adding 1 because Golang's Modulo function behaves differently to similar operators in most other languages.
+		// Adding 1 because Golang's Modulo function behaves differently to similar operators in most other languages.
 		if h < 0 {
 			h++
 		}
@@ -116,7 +117,6 @@ func AdjustHue(img image.Image, shift float64) *image.NRGBA {
 //
 //	dstImage = imaging.AdjustContrast(srcImage, -10) // Decrease image contrast by 10%.
 //	dstImage = imaging.AdjustContrast(srcImage, 20) // Increase image contrast by 20%.
-//
 func AdjustContrast(img image.Image, percentage float64) *image.NRGBA {
 	if percentage == 0 {
 		return Clone(img)
@@ -148,7 +148,6 @@ func AdjustContrast(img image.Image, percentage float64) *image.NRGBA {
 //
 //	dstImage = imaging.AdjustBrightness(srcImage, -15) // Decrease image brightness by 15%.
 //	dstImage = imaging.AdjustBrightness(srcImage, 10) // Increase image brightness by 10%.
-//
 func AdjustBrightness(img image.Image, percentage float64) *image.NRGBA {
 	if percentage == 0 {
 		return Clone(img)
@@ -172,7 +171,6 @@ func AdjustBrightness(img image.Image, percentage float64) *image.NRGBA {
 // Example:
 //
 //	dstImage = imaging.AdjustGamma(srcImage, 0.7)
-//
 func AdjustGamma(img image.Image, gamma float64) *image.NRGBA {
 	if gamma == 1 {
 		return Clone(img)
@@ -198,7 +196,6 @@ func AdjustGamma(img image.Image, gamma float64) *image.NRGBA {
 //
 //	dstImage = imaging.AdjustSigmoid(srcImage, 0.5, 3.0) // Increase the contrast.
 //	dstImage = imaging.AdjustSigmoid(srcImage, 0.5, -3.0) // Decrease the contrast.
-//
 func AdjustSigmoid(img image.Image, midpoint, factor float64) *image.NRGBA {
 	if factor == 0 {
 		return Clone(img)
@@ -270,7 +267,6 @@ func adjustLUT(img image.Image, lut []uint8) *image.NRGBA {
 //			return color.NRGBA{uint8(r), c.G, c.B, c.A}
 //		}
 //	)
-//
 func AdjustFunc(img image.Image, fn func(c color.NRGBA) color.NRGBA) *image.NRGBA {
 	src := newScanner(img)
 	dst := image.NewNRGBA(image.Rect(0, 0, src.w, src.h))

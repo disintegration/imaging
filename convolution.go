@@ -24,7 +24,7 @@ func Convolve3x3(img image.Image, kernel [9]float64, options *ConvolveOptions) *
 
 // Convolve5x5 convolves the image with the specified 5x5 convolution kernel.
 // Default parameters are used if a nil *ConvolveOptions is passed.
-func Convolve5x5(img image.Image, kernel [25]float64, options *ConvolveOptions) *image.NRGBA {
+func Convolve5x5(img image.Image, kernel *[25]float64, options *ConvolveOptions) *image.NRGBA {
 	return convolve(img, kernel[:], options)
 }
 

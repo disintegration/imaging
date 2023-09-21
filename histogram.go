@@ -46,7 +46,7 @@ func Histogram(img image.Image) [256]float64 {
 	})
 
 	for i := 0; i < 256; i++ {
-		histogram[i] = histogram[i] / total
+		histogram[i] /= total
 	}
 	return histogram
 }
