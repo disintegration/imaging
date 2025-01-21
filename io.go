@@ -9,7 +9,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +68,7 @@ func Decode(r io.Reader, opts ...DecodeOption) (image.Image, error) {
 	go func() {
 		defer close(done)
 		orient = readOrientation(pr)
-		io.Copy(ioutil.Discard, pr)
+		io.Copy(io.Discard, pr)
 	}()
 
 	img, _, err := image.Decode(r)
@@ -91,7 +90,6 @@ func Decode(r io.Reader, opts ...DecodeOption) (image.Image, error) {
 //
 //	// Load an image and transform it depending on the EXIF orientation tag (if present).
 //	img, err := imaging.Open("test.jpg", imaging.AutoOrientation(true))
-//
 func Open(filename string, opts ...DecodeOption) (image.Image, error) {
 	file, err := fs.Open(filename)
 	if err != nil {
@@ -264,7 +262,6 @@ func Encode(w io.Writer, img image.Image, format Format, opts ...EncodeOption) e
 //
 //	// Save the image as JPEG with optional quality parameter set to 80.
 //	err := imaging.Save(img, "out.jpg", imaging.JPEGQuality(80))
-//
 func Save(img image.Image, filename string, opts ...EncodeOption) (err error) {
 	f, err := FormatFromFilename(filename)
 	if err != nil {
@@ -339,7 +336,7 @@ func readOrientation(r io.Reader) orientation {
 		if size < 2 {
 			return orientationUnspecified // Invalid block size.
 		}
-		if _, err := io.CopyN(ioutil.Discard, r, int64(size-2)); err != nil {
+		if _, err := io.CopyN(io.Discard, r, int64(size-2)); err != nil {
 			return orientationUnspecified
 		}
 	}
@@ -352,7 +349,7 @@ func readOrientation(r io.Reader) orientation {
 	if header != exifHeader {
 		return orientationUnspecified
 	}
-	if _, err := io.CopyN(ioutil.Discard, r, 2); err != nil {
+	if _, err := io.CopyN(io.Discard, r, 2); err != nil {
 		return orientationUnspecified
 	}
 
@@ -372,7 +369,7 @@ func readOrientation(r io.Reader) orientation {
 	default:
 		return orientationUnspecified // Invalid byte order flag.
 	}
-	if _, err := io.CopyN(ioutil.Discard, r, 2); err != nil {
+	if _, err := io.CopyN(io.Discard, r, 2); err != nil {
 		return orientationUnspecified
 	}
 
@@ -384,7 +381,7 @@ func readOrientation(r io.Reader) orientation {
 	if offset < 8 {
 		return orientationUnspecified // Invalid offset value.
 	}
-	if _, err := io.CopyN(ioutil.Discard, r, int64(offset-8)); err != nil {
+	if _, err := io.CopyN(io.Discard, r, int64(offset-8)); err != nil {
 		return orientationUnspecified
 	}
 
@@ -401,12 +398,12 @@ func readOrientation(r io.Reader) orientation {
 			return orientationUnspecified
 		}
 		if tag != orientationTag {
-			if _, err := io.CopyN(ioutil.Discard, r, 10); err != nil {
+			if _, err := io.CopyN(io.Discard, r, 10); err != nil {
 				return orientationUnspecified
 			}
 			continue
 		}
-		if _, err := io.CopyN(ioutil.Discard, r, 6); err != nil {
+		if _, err := io.CopyN(io.Discard, r, 6); err != nil {
 			return orientationUnspecified
 		}
 		var val uint16
