@@ -26,7 +26,6 @@ func newScanner(img image.Image) *scanner {
 	return s
 }
 
-// scan scans the given rectangular region of the image into dst.
 func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 	switch img := s.image.(type) {
 	case *image.NRGBA:
@@ -35,17 +34,23 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		i := y1*img.Stride + x1*4
 		if size == 4 {
 			for y := y1; y < y2; y++ {
+				if len(dst) < j+4 || len(img.Pix) < i+4 {
+					return
+				}
 				d := dst[j : j+4 : j+4]
-				s := img.Pix[i : i+4 : i+4]
-				d[0] = s[0]
-				d[1] = s[1]
-				d[2] = s[2]
-				d[3] = s[3]
+				slice := img.Pix[i : i+4 : i+4]
+				d[0] = slice[0]
+				d[1] = slice[1]
+				d[2] = slice[2]
+				d[3] = slice[3]
 				j += size
 				i += img.Stride
 			}
 		} else {
 			for y := y1; y < y2; y++ {
+				if len(dst) < j+size || len(img.Pix) < i+size {
+					return
+				}
 				copy(dst[j:j+size], img.Pix[i:i+size])
 				j += size
 				i += img.Stride
@@ -57,12 +62,15 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1*8
 			for x := x1; x < x2; x++ {
-				s := img.Pix[i : i+8 : i+8]
+				if len(img.Pix) < i+8 || len(dst) < j+4 {
+					return
+				}
+				slice := img.Pix[i : i+8 : i+8]
 				d := dst[j : j+4 : j+4]
-				d[0] = s[0]
-				d[1] = s[2]
-				d[2] = s[4]
-				d[3] = s[6]
+				d[0] = slice[0]
+				d[1] = slice[2]
+				d[2] = slice[4]
+				d[3] = slice[6]
 				j += 4
 				i += 8
 			}
@@ -73,25 +81,22 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1*4
 			for x := x1; x < x2; x++ {
+				if len(img.Pix) < i+4 || len(dst) < j+4 {
+					return
+				}
 				d := dst[j : j+4 : j+4]
 				a := img.Pix[i+3]
 				switch a {
 				case 0:
-					d[0] = 0
-					d[1] = 0
-					d[2] = 0
-					d[3] = a
+					d[0], d[1], d[2], d[3] = 0, 0, 0, a
 				case 0xff:
-					s := img.Pix[i : i+4 : i+4]
-					d[0] = s[0]
-					d[1] = s[1]
-					d[2] = s[2]
-					d[3] = a
+					slice := img.Pix[i : i+4 : i+4]
+					d[0], d[1], d[2], d[3] = slice[0], slice[1], slice[2], a
 				default:
-					s := img.Pix[i : i+4 : i+4]
-					r16 := uint16(s[0])
-					g16 := uint16(s[1])
-					b16 := uint16(s[2])
+					slice := img.Pix[i : i+4 : i+4]
+					r16 := uint16(slice[0])
+					g16 := uint16(slice[1])
+					b16 := uint16(slice[2])
 					a16 := uint16(a)
 					d[0] = uint8(r16 * 0xff / a16)
 					d[1] = uint8(g16 * 0xff / a16)
@@ -108,23 +113,22 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1*8
 			for x := x1; x < x2; x++ {
-				s := img.Pix[i : i+8 : i+8]
+				if len(img.Pix) < i+8 || len(dst) < j+4 {
+					return
+				}
+				slice := img.Pix[i : i+8 : i+8]
 				d := dst[j : j+4 : j+4]
-				a := s[6]
+				a := slice[6]
 				switch a {
 				case 0:
-					d[0] = 0
-					d[1] = 0
-					d[2] = 0
+					d[0], d[1], d[2] = 0, 0, 0
 				case 0xff:
-					d[0] = s[0]
-					d[1] = s[2]
-					d[2] = s[4]
+					d[0], d[1], d[2] = slice[0], slice[2], slice[4]
 				default:
-					r32 := uint32(s[0])<<8 | uint32(s[1])
-					g32 := uint32(s[2])<<8 | uint32(s[3])
-					b32 := uint32(s[4])<<8 | uint32(s[5])
-					a32 := uint32(s[6])<<8 | uint32(s[7])
+					r32 := uint32(slice[0])<<8 | uint32(slice[1])
+					g32 := uint32(slice[2])<<8 | uint32(slice[3])
+					b32 := uint32(slice[4])<<8 | uint32(slice[5])
+					a32 := uint32(slice[6])<<8 | uint32(slice[7])
 					d[0] = uint8((r32 * 0xffff / a32) >> 8)
 					d[1] = uint8((g32 * 0xffff / a32) >> 8)
 					d[2] = uint8((b32 * 0xffff / a32) >> 8)
@@ -140,12 +144,12 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1
 			for x := x1; x < x2; x++ {
+				if len(img.Pix) <= i || len(dst) < j+4 {
+					return
+				}
 				c := img.Pix[i]
 				d := dst[j : j+4 : j+4]
-				d[0] = c
-				d[1] = c
-				d[2] = c
-				d[3] = 0xff
+				d[0], d[1], d[2], d[3] = c, c, c, 0xff
 				j += 4
 				i++
 			}
@@ -156,12 +160,12 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1*2
 			for x := x1; x < x2; x++ {
+				if len(img.Pix) <= i || len(dst) < j+4 {
+					return
+				}
 				c := img.Pix[i]
 				d := dst[j : j+4 : j+4]
-				d[0] = c
-				d[1] = c
-				d[2] = c
-				d[3] = 0xff
+				d[0], d[1], d[2], d[3] = c, c, c, 0xff
 				j += 4
 				i += 2
 			}
@@ -196,6 +200,10 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 					ic = yBase + (x/2 - hx)
 				default:
 					ic = img.COffset(x, y)
+				}
+
+				if len(img.Y) <= iy || len(img.Cb) <= ic || len(img.Cr) <= ic || len(dst) < j+4 {
+					return
 				}
 
 				yy1 := int32(img.Y[iy]) * 0x10101
@@ -239,12 +247,12 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1
 			for x := x1; x < x2; x++ {
+				if len(img.Pix) <= i || len(s.palette) <= int(img.Pix[i]) || len(dst) < j+4 {
+					return
+				}
 				c := s.palette[img.Pix[i]]
 				d := dst[j : j+4 : j+4]
-				d[0] = c.R
-				d[1] = c.G
-				d[2] = c.B
-				d[3] = c.A
+				d[0], d[1], d[2], d[3] = c.R, c.G, c.B, c.A
 				j += 4
 				i++
 			}
@@ -259,19 +267,16 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		y2 += b.Min.Y
 		for y := y1; y < y2; y++ {
 			for x := x1; x < x2; x++ {
+				if len(dst) < j+4 {
+					return
+				}
 				r16, g16, b16, a16 := s.image.At(x, y).RGBA()
 				d := dst[j : j+4 : j+4]
 				switch a16 {
 				case 0xffff:
-					d[0] = uint8(r16 >> 8)
-					d[1] = uint8(g16 >> 8)
-					d[2] = uint8(b16 >> 8)
-					d[3] = 0xff
+					d[0], d[1], d[2], d[3] = uint8(r16>>8), uint8(g16>>8), uint8(b16>>8), 0xff
 				case 0:
-					d[0] = 0
-					d[1] = 0
-					d[2] = 0
-					d[3] = 0
+					d[0], d[1], d[2], d[3] = 0, 0, 0, 0
 				default:
 					d[0] = uint8(((r16 * 0xffff) / a16) >> 8)
 					d[1] = uint8(((g16 * 0xffff) / a16) >> 8)
