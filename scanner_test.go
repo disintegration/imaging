@@ -1,6 +1,7 @@
 package imaging
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
@@ -8,6 +9,19 @@ import (
 	"image/draw"
 	"testing"
 )
+
+func TestScannerInvalidPalettedIndex(t *testing.T) {
+	img := image.NewPaletted(image.Rect(0, 0, 1, 1), color.Palette{color.White})
+	img.Pix[0] = 1
+
+	dst := make([]byte, 4)
+	newScanner(img).scan(0, 0, 1, 1, dst)
+
+	want := []byte{0, 0, 0, 0}
+	if !bytes.Equal(dst, want) {
+		t.Fatalf("scan invalid palette index: got %v want %v", dst, want)
+	}
+}
 
 func TestScanner(t *testing.T) {
 	rect := image.Rect(-1, -1, 15, 15)
