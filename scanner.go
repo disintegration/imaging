@@ -239,7 +239,10 @@ func (s *scanner) scan(x1, y1, x2, y2 int, dst []uint8) {
 		for y := y1; y < y2; y++ {
 			i := y*img.Stride + x1
 			for x := x1; x < x2; x++ {
-				c := s.palette[img.Pix[i]]
+				var c color.NRGBA
+				if paletteIndex := int(img.Pix[i]); paletteIndex < len(s.palette) {
+					c = s.palette[paletteIndex]
+				}
 				d := dst[j : j+4 : j+4]
 				d[0] = c.R
 				d[1] = c.G
