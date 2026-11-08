@@ -791,6 +791,42 @@ func TestPaste(t *testing.T) {
 		want *image.NRGBA
 	}{
 		{
+			"Paste 1x1 2x2 aligned",
+			image.NewNRGBA(image.Rect(0, 0, 1, 1)),
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 2, 2),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x10, 0x11, 0x12, 0x13, 0x20, 0x21, 0x22, 0x23,
+					0x30, 0x31, 0x32, 0x33, 0x40, 0x41, 0x42, 0x43,
+				},
+			},
+			image.Pt(0, 0),
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 1),
+				Stride: 4,
+				Pix:    []uint8{0x10, 0x11, 0x12, 0x13},
+			},
+		},
+		{
+			"Paste 1x1 2x2 negative offset",
+			image.NewNRGBA(image.Rect(-1, -1, 0, 0)),
+			&image.NRGBA{
+				Rect:   image.Rect(1, 1, 3, 3),
+				Stride: 2 * 4,
+				Pix: []uint8{
+					0x10, 0x11, 0x12, 0x13, 0x20, 0x21, 0x22, 0x23,
+					0x30, 0x31, 0x32, 0x33, 0x40, 0x41, 0x42, 0x43,
+				},
+			},
+			image.Pt(-2, -2),
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 1),
+				Stride: 4,
+				Pix:    []uint8{0x40, 0x41, 0x42, 0x43},
+			},
+		},
+		{
 			"Paste 2x3 2x3",
 			&image.NRGBA{
 				Rect:   image.Rect(0, 0, 2, 3),
@@ -974,6 +1010,24 @@ func TestPasteCenter(t *testing.T) {
 		src2 image.Image
 		want *image.NRGBA
 	}{
+		{
+			"PasteCenter 1x1 3x3",
+			image.NewNRGBA(image.Rect(-1, -1, 0, 0)),
+			&image.NRGBA{
+				Rect:   image.Rect(1, 1, 4, 4),
+				Stride: 3 * 4,
+				Pix: []uint8{
+					0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+					0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
+					0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b,
+				},
+			},
+			&image.NRGBA{
+				Rect:   image.Rect(0, 0, 1, 1),
+				Stride: 4,
+				Pix:    []uint8{0x14, 0x15, 0x16, 0x17},
+			},
+		},
 		{
 			"PasteCenter 2x3 2x1",
 			&image.NRGBA{
