@@ -137,7 +137,7 @@ func Paste(background, img image.Image, pos image.Point) *image.NRGBA {
 	if interRect.Empty() {
 		return dst
 	}
-	if interRect.Eq(dst.Bounds()) {
+	if pasteRect.Eq(dst.Bounds()) {
 		return Clone(img)
 	}
 
